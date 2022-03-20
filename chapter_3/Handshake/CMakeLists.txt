@@ -6,10 +6,9 @@ set (Recipe_Name "3_0_DeviceHandshake")
 # ON - Use CMake to auto locate the Vulkan SDK.
 # OFF - Vulkan SDK path can be specified manually
 # This is helpful to test the build on various Vulkan versions.
-option(AUTO_LOCATE_VULKAN "AUTO_LOCATE_VULKAN:=" ON)
+option(AUTO_LOCATE_VULKAN "AUTO_LOCATE_VULKAN" ON)
 
 if (AUTO_LOCATE_VULKAN)
-
     message(STATUS "Attempting to auto locate Vulkan using CMake...")
 
     # Find Vulkan Path using CMake's Vulkan Module
@@ -29,11 +28,11 @@ if (AUTO_LOCATE_VULKAN)
         # CMake may fail to locate the libraries but could be able to
         # provide some path in VulkanSDK include directory variable
         # 'Vulkan_INCLUDE_DIRS', try to extract path from this
-        message(STATUS "Failed to locate VulkanSDK, retrying from 'Vulkan_INCLUDE_DIRS' variable)
+        message(STATUS "Failed to locate VulkanSDK, retrying from 'Vulkan_INCLUDE_DIRS' variable")
 
         # Check if Vulkan path is valid, if not switch to manual mode
-        if (EXISTS "${VULKAN_PATH})
-            message(STATUS "Successfully located the Vulkan SDK: ${VULKAN_PATH})
+        if (EXISTS "${VULKAN_PATH}")
+            message(STATUS "Successfully located the Vulkan SDK: ${VULKAN_PATH}")
         else()
             message(ERROR "Unable to locate VulkanSDK. Please turn off auto locate option by specifying 'AUTO_LOCATE_VULKAN' as 'OFF'")
             message(ERROR "and specify manual path using 'VULKAN_SDK' and 'VULKAN_VERSION' variables in CMakeLists.txt")
@@ -44,11 +43,11 @@ else()
     message(STATUS "Attempting to locate VulkanSDK using manual path...")
     set(VULKAN_SDK "C:/VulkanSDK")
     set(VULKAN_VERSION "1.0.33.0")
-    set(VULKAN_PATH "${VULKAN_SDK}/${VULKAN_VERSION})
+    set(VULKAN_PATH "${VULKAN_SDK}/${VULKAN_VERSION}")
     message(STATUS "Using manual specified path: ${VULKAN_PATH}")
 
     # Check if manual set path exists
-    if (NOT EXISTS "${VULKAN_PATH})
+    if (NOT EXISTS "${VULKAN_PATH}")
         message(ERROR "Unable to locate this VulkanSDK path: ${VULKAN_PATH}")
         return()
     endif()
@@ -75,7 +74,7 @@ endif()
 if (WIN32)
     source_group("include" REGULAR_EXPRESSION "include/*")
     source_group("source" REGULAR_EXPRESSION "source/*")
-endif()
+endif(WIN32)
 
 # Define include path
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -104,4 +103,3 @@ set_property(TARGET ${Recipe_Name} PROPERTY CXX_STANDARD_REQUIRED ON)
 # Define C version to be used for building the project
 set_property(TARGET ${Recipe_Name} PROPERTY C_STANDARD 99)
 set_property(TARGET ${Recipe_Name} PROPERTY C_STANDARD_REQUIRED ON)
-
