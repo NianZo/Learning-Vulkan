@@ -6,7 +6,7 @@ set (Recipe_Name "3_0_DeviceHandshake")
 # ON - Use CMake to auto locate the Vulkan SDK.
 # OFF - Vulkan SDK path can be specified manually
 # This is helpful to test the build on various Vulkan versions.
-option(AUTO_LOCATE_VULKAN "AUTO_LOCATE_VULKAN" ON)
+option(AUTO_LOCATE_VULKAN "AUTO_LOCATE_VULKAN" OFF)
 
 if (AUTO_LOCATE_VULKAN)
     message(STATUS "Attempting to auto locate Vulkan using CMake...")
@@ -34,15 +34,15 @@ if (AUTO_LOCATE_VULKAN)
         if (EXISTS "${VULKAN_PATH}")
             message(STATUS "Successfully located the Vulkan SDK: ${VULKAN_PATH}")
         else()
-            message(ERROR "Unable to locate VulkanSDK. Please turn off auto locate option by specifying 'AUTO_LOCATE_VULKAN' as 'OFF'")
-            message(ERROR "and specify manual path using 'VULKAN_SDK' and 'VULKAN_VERSION' variables in CMakeLists.txt")
+            message(ERROR " Unable to locate VulkanSDK. Please turn off auto locate option by specifying 'AUTO_LOCATE_VULKAN' as 'OFF'")
+            message(ERROR " and specify manual path using 'VULKAN_SDK' and 'VULKAN_VERSION' variables in CMakeLists.txt")
             return()
         endif()
     endif()
 else()
     message(STATUS "Attempting to locate VulkanSDK using manual path...")
-    set(VULKAN_SDK "C:/VulkanSDK")
-    set(VULKAN_VERSION "1.0.33.0")
+    set(VULKAN_SDK "/usr/include/vulkan")
+    set(VULKAN_VERSION "")
     set(VULKAN_PATH "${VULKAN_SDK}/${VULKAN_VERSION}")
     message(STATUS "Using manual specified path: ${VULKAN_PATH}")
 
@@ -57,7 +57,7 @@ endif()
 project(${Recipe_Name})
 
 # Add preprocessor definitions here
-add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
+# add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
 
 # Add 'vulkan-1' library for built Vulkan application
 set(VULKAN_LINK_LIST "vulkan-1")
