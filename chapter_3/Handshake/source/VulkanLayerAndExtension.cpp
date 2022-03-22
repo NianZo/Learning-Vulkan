@@ -63,4 +63,46 @@ VkResult VulkanLayerAndExtension::getInstanceLayerProperties()
 	return result;
 }
 
+// Retrieves extension and its properties at instance and device level.
+// Pass a valid physical device pointer (gpu) to retrieve device level extensions, otherwise use nullptr to retrieve extension specific to instance level
+VkResult VulkanLayerAndExtension::getExtensionProperties(LayerProperties& layerProps, VkPhysicalDevice* gpu = nullptr)
+{
+	// Stores number of extensions per layer
+	uint32_t extensionCount;
+	VkResult result;
+
+	// Name of the layer
+	char* layerName = layerProps.properties.layerName;
+
+	do
+	{
+		// Get the total number of extensions in this layer
+		if (gpu)
+		{
+			result = vkEnumerateDeviceExtensionProperties(*gpu, layerName, &extensionCount, nullptr);
+		} else
+		{
+			result = vkEnumerateInstanceExtensionProperties(layerName, &extensionCount, nullptr);
+		}
+
+		if (result || extensionCount == 0)
+		{
+			continue;
+		}
+
+		layerProps.extensions.resize(extensionCount);
+
+		// Gather all extension properties
+		if (gpu)
+		{
+			result = vkEnumerateDeviceExtensionProperties(*gpu, layerName, &extensionCount, layerProps.extensions.data());
+		} else
+		{
+			result = vkEnumerateInstanceExtensionProperties(layerName, &extensionCount, layerProps.extensions.data());
+		}
+	} while(result == VK_INCOMPLETE);
+
+	return result;
+}
+
 
