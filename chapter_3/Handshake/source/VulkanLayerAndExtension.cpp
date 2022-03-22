@@ -40,7 +40,27 @@ VkResult VulkanLayerAndExtension::getInstanceLayerProperties()
 		// Print layer name and its description
 		std::cout << "\n" << globalLayerProp.description << "\n\t|\n\t|---[Layer Name]--> " << globalLayerProp.layerName << "\n";
 
+		LayerProperties layerProps;
+		layerProps.properties = globalLayerProp;
+
+		// Get Instance level extensions for corresponding layer properties
+		result = getExtensionProperties(layerProps);
+
+		if (result)
+		{
+			continue;
+		}
+
+		layerPropertyList.push_back(layerProps);
+
+		// Print extension name for each instance layer
+		for (auto j : layerProps.extensions)
+		{
+			std::cout << "\t\t|\n\t\t|---[Layer Extension]--> " << j.extensionName << "\n";
+		}
 	}
+
+	return result;
 }
 
 

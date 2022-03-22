@@ -20,7 +20,7 @@ struct LayerProperties
 class VulkanLayerAndExtension
 {
 	// Layers and corresponding extension list
-	std::vector<LayerProperties> layers;
+	std::vector<LayerProperties> layerPropertyList;
 	VkResult getInstanceLayerProperties();
 
 	// Global extensions
