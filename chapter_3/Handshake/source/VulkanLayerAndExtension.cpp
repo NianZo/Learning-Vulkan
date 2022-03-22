@@ -6,6 +6,7 @@
  */
 
 #include "VulkanLayerAndExtension.hpp"
+#include <iostream>
 
 VkResult VulkanLayerAndExtension::getInstanceLayerProperties()
 {
@@ -17,6 +18,29 @@ VkResult VulkanLayerAndExtension::getInstanceLayerProperties()
 	VkResult result;
 
 	// Query all the layers
+	do
+	{
+		result = vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr);
+
+		if (result)
+			return result;
+
+		if (instanceLayerCount == 0)
+			return VK_INCOMPLETE; // return fail
+
+		layerProperties.resize(instanceLayerCount);
+		result  = vkEnumerateInstanceLayerProperties(&instanceLayerCount, layerProperties.data());
+	} while (result == VK_INCOMPLETE);
+
+	// Query all the extensions for each layer and store it.
+	std::cout << "\nInstanced Layers" << std::endl;
+	std::cout << "===================" << std::endl;
+	for (auto globalLayerProp : layerProperties)
+	{
+		// Print layer name and its description
+		std::cout << "\n" << globalLayerProp.description << "\n\t|\n\t|---[Layer Name]--> " << globalLayerProp.layerName << "\n";
+
+	}
 }
 
 
