@@ -6,7 +6,7 @@ set (Recipe_Name "3_0_DeviceHandshake")
 # ON - Use CMake to auto locate the Vulkan SDK.
 # OFF - Vulkan SDK path can be specified manually
 # This is helpful to test the build on various Vulkan versions.
-option(AUTO_LOCATE_VULKAN "AUTO_LOCATE_VULKAN" OFF)
+option(AUTO_LOCATE_VULKAN "AUTO_LOCATE_VULKAN" ON)
 
 if (AUTO_LOCATE_VULKAN)
     message(STATUS "Attempting to auto locate Vulkan using CMake...")
@@ -43,7 +43,7 @@ else()
     message(STATUS "Attempting to locate VulkanSDK using manual path...")
     set(VULKAN_SDK "/usr/include/vulkan")
     set(VULKAN_VERSION "")
-    set(VULKAN_PATH "${VULKAN_SDK}/${VULKAN_VERSION}")
+    set(VULKAN_PATH "${VULKAN_SDK}")
     message(STATUS "Using manual specified path: ${VULKAN_PATH}")
 
     # Check if manual set path exists
@@ -57,18 +57,19 @@ endif()
 project(${Recipe_Name})
 
 # Add preprocessor definitions here
-# add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
+#add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
 
 # Add 'vulkan-1' library for built Vulkan application
-set(VULKAN_LINK_LIST "vulkan-1")
+#set(VULKAN_LINK_LIST "libvulkan")
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+#if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     # Include Vulkan header files from VulkanSDK
-    include_directories(AFTER ${VULKAN_PATH}/Include)
+    include_directories(AFTER ${VULKAN_PATH}/include)
 
     # Link directory for vulkan-1
-    link_directories(${VULKAN_PATH}/Bin)
-endif()
+    link_directories(${VULKAN_PATH}/bin)
+    link_libraries(${Vulkan_LIBRARIES})
+#endif()
 
 # Bunch the header and source files together
 if (WIN32)
@@ -103,3 +104,4 @@ set_property(TARGET ${Recipe_Name} PROPERTY CXX_STANDARD_REQUIRED ON)
 # Define C version to be used for building the project
 set_property(TARGET ${Recipe_Name} PROPERTY C_STANDARD 99)
 set_property(TARGET ${Recipe_Name} PROPERTY C_STANDARD_REQUIRED ON)
+

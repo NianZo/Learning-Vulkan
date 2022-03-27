@@ -19,6 +19,9 @@ struct LayerProperties
 
 class VulkanLayerAndExtension
 {
+public:
+	std::vector<const char*> instanceExtensionNames;
+	std::vector<const char*> instanceLayerNames;
 	// Layers and corresponding extension list
 	std::vector<LayerProperties> layerPropertyList;
 	VkResult getInstanceLayerProperties();
