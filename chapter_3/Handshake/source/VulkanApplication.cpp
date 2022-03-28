@@ -52,3 +52,13 @@ void VulkanApplication::initialize()
 	// specified layer and extension names.
 	createVulkanInstance(layerNames, instanceExtensionNames, title);
 }
+
+VkResult VulkanApplication::enumeratePhysicalDevices(std::vector<VkPhysicalDevice>& gpuList)
+{
+	uint32_t gpuDeviceCount;
+	vkEnumeratePhysicalDevices(instanceObj.instance, &gpuDeviceCount, nullptr);
+	gpuList.resize(gpuDeviceCount);
+	return vkEnumeratePhysicalDevices(instanceObj.instance, &gpuDeviceCount, gpuList.data());
+}
+
+

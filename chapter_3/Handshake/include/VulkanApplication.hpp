@@ -35,6 +35,7 @@ private:
 	static std::once_flag onlyOnce;
 
 	VkResult createVulkanInstance(std::vector<const char*>& layers, std::vector<const char*>& extensions, const char* applicationName);
+	VkResult enumeratePhysicalDevices(std::vector<VkPhysicalDevice>& gpuList);
 };
 
 
