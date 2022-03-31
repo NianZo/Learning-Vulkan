@@ -10,6 +10,7 @@
 
 #include "VulkanInstance.hpp"
 #include "VulkanLayerAndExtension.hpp"
+#include "VulkanDevice.hpp"
 #include <mutex>
 
 class VulkanApplication
@@ -27,6 +28,7 @@ public:
 	void deInitialize(); // Release resources
 
 	VulkanInstance instanceObj;
+	VulkanDevice* deviceObj;
 
 private:
 	VulkanApplication(); // Private to enforce Singleton pattern
@@ -36,6 +38,7 @@ private:
 
 	VkResult createVulkanInstance(std::vector<const char*>& layers, std::vector<const char*>& extensions, const char* applicationName);
 	VkResult enumeratePhysicalDevices(std::vector<VkPhysicalDevice>& gpuList);
+	VkResult handShakeWithDevice(VkPhysicalDevice* gpu, std::vector<const char*>& layers, std::vector<const char*>& extensions);
 };
 
 

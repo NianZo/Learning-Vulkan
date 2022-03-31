@@ -25,10 +25,10 @@ public:
 	VkQueue queue;
 	std::vector<VkQueueFamilyProperties> queueFamilyProps;
 	uint32_t graphicsQueueFamilyIndex;
-	uint32_t queueFamilyCound;
+	uint32_t queueFamilyCount;
 	VulkanLayerAndExtension layerExtension;
 
-	void createDevice();
+	VkResult createDevice(std::vector<const char*>& layers, std::vector<const char*>& extensions);
 	void destroyDevice();
 	void initializeDeviceQueue();
 	void memoryTypeFromProperties();
