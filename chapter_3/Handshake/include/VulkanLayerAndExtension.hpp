@@ -31,6 +31,17 @@ public:
 
 	// Device based extensions
 	VkResult getDeviceExtensionProperties(VkPhysicalDevice* gpu);
+
+	VkBool32 areLayersSupported(std::vector<const char*>& layerNames);
+
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debugFunction(VkFlags msgFlags, VkDebugReportObjectTypeEXT objType, uint64_t srcObject, size_t location, int32_t msgCode, const char* layerPrefix, const char* msg, void* userData);
+
+	PFN_vkCreateDebugReportCallbackEXT dbgCreateDebugReportCallback;
+	PFN_vkDestroyDebugReportCallbackEXT dbgDestroyDebugReportCallback;
+	VkDebugReportCallbackEXT debugReportCallback;
+	VkResult createDebugReportCallback();
+	void destroyDebugReportCallback();
+	VkDebugReportCallbackCreateInfoEXT dbgReportCreateInfo;
 };
 
 

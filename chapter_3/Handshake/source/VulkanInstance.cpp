@@ -26,7 +26,7 @@ VkResult VulkanInstance::createInstance(std::vector<const char*>& layers, std::v
 	// Define the Vulkan instance create info structure
 	VkInstanceCreateInfo instanceInfo = {};
 	instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	instanceInfo.pNext = nullptr;
+	instanceInfo.pNext = &layerExtension.dbgReportCreateInfo;
 	instanceInfo.flags = 0;
 	instanceInfo.pApplicationInfo = &appInfo;
 	instanceInfo.enabledLayerCount = layers.size();

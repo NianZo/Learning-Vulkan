@@ -29,11 +29,12 @@ public:
 
 	VulkanInstance instanceObj;
 	VulkanDevice* deviceObj;
+	static std::unique_ptr<VulkanApplication> instance;
 
 private:
 	VulkanApplication(); // Private to enforce Singleton pattern
 
-	static std::unique_ptr<VulkanApplication> instance;
+
 	static std::once_flag onlyOnce;
 
 	VkResult createVulkanInstance(std::vector<const char*>& layers, std::vector<const char*>& extensions, const char* applicationName);
