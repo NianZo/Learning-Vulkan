@@ -29,7 +29,7 @@ public:
 
 	VulkanInstance instanceObj;
 	VulkanDevice* deviceObj;
-	static std::unique_ptr<VulkanApplication> instance;
+	//static std::unique_ptr<VulkanApplication> instance;
 
 private:
 	VulkanApplication(); // Private to enforce Singleton pattern

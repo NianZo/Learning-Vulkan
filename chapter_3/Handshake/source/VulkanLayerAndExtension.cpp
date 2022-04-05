@@ -181,8 +181,20 @@ VkBool32 VulkanLayerAndExtension::areLayersSupported(std::vector<const char*>& l
 	return true;
 }
 
+void VulkanLayerAndExtension::fillDbgReportCreateInfo()
+{
+	// Define the debug report control structure, provide the reference of 'debugFunction',
+	// this function prints the debug information on the console
+	dbgReportCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
+	dbgReportCreateInfo.pfnCallback = debugFunction;
+	dbgReportCreateInfo.pUserData = nullptr;
+	dbgReportCreateInfo.pNext = nullptr;
+	dbgReportCreateInfo.flags = VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+}
+
 VkResult VulkanLayerAndExtension::createDebugReportCallback()
 {
+	std::cout << "Beginning of createDebugReportCallback function" << std::endl;
 	VkResult result;
 	VulkanApplication& appObj = VulkanApplication::GetInstance();
 	VkInstance& instance = appObj.instanceObj.instance;
@@ -203,13 +215,7 @@ VkResult VulkanLayerAndExtension::createDebugReportCallback()
 		return VK_ERROR_INITIALIZATION_FAILED;
 	}
 
-	// Define the debug report control structure, provide the reference of 'debugFunction',
-	// this function prints the debug information on the console
-	dbgReportCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
-	dbgReportCreateInfo.pfnCallback = debugFunction;
-	dbgReportCreateInfo.pUserData = nullptr;
-	dbgReportCreateInfo.pNext = nullptr;
-	dbgReportCreateInfo.flags = VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+
 
 	// Create the debug report callback and store the handle into 'debugReportCallback'
 	result = dbgCreateDebugReportCallback(instance, &dbgReportCreateInfo, nullptr, &debugReportCallback);
@@ -217,6 +223,7 @@ VkResult VulkanLayerAndExtension::createDebugReportCallback()
 	{
 		std::cout << "Debug report callback object created successfully\n";
 	}
+	std::cout << "End of createDebugReportCallback function" << std::endl;
 	return result;
 }
 

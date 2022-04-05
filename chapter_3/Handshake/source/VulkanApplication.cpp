@@ -6,25 +6,31 @@
  */
 
 #include "VulkanApplication.hpp"
+#include <iostream>
 
 std::vector<const char*> instanceExtensionNames =
 {
 		VK_KHR_SURFACE_EXTENSION_NAME,
 		//VK_KHR_WIN32_SURFACE_EXTENSION_NAME
-		VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+		VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 };
 
-std::vector<const char*> layerNames =
-{
-		//"VK_LAYER_LUNARG_api_dump",
-		"VK_LAYER_GOOGLE_threading",
-		"VK_LAYER_LUNARG_parameter_validation",
-		"VK_LAYER_LUNARG_device_limits",
-		"VK_LAYER_LUNARG_object_tracker",
-		"VK_LAYER_LUNARG_image",
-		"VK_LAYER_LUNARG_core_validation",
-		"VK_LAYER_LUNARG_swapchain",
-		"VK_LAYER_GOOGLE_unique_objects"
+//std::vector<const char*> layerNames =
+//{
+//		//"VK_LAYER_LUNARG_api_dump",
+//		"VK_LAYER_GOOGLE_threading",
+//		"VK_LAYER_LUNARG_parameter_validation",
+//		"VK_LAYER_LUNARG_device_limits",
+//		"VK_LAYER_LUNARG_object_tracker",
+//		"VK_LAYER_LUNARG_image",
+//		"VK_LAYER_LUNARG_core_validation",
+//		"VK_LAYER_LUNARG_swapchain",
+//		"VK_LAYER_GOOGLE_unique_objects"
+//};
+
+std::vector<const char *> layerNames = {
+	"VK_LAYER_KHRONOS_validation"
 };
 
 std::vector<const char*> deviceExtensionNames =
@@ -41,6 +47,7 @@ std::vector<VkPhysicalDevice> gpuList;
 // Returns the Singleton object of VulkanApplication
 VulkanApplication& VulkanApplication::GetInstance()
 {
+	//static std::unique_ptr<VulkanApplication> instance = std::make_unique<VulkanApplication>();
 	static VulkanApplication instance;
 	return instance;
 }
@@ -68,16 +75,22 @@ void VulkanApplication::initialize()
 {
 	char title[] = "Hello World!";
 
+	// Check if the supplied layers are supported or not
+	instanceObj.layerExtension.areLayersSupported(layerNames);
+
 	// Create the Vulkan instance with
 	// specified layer and extension names.
+	std::cout << "Start initializing VulkanApplication" << std::endl;
 	createVulkanInstance(layerNames, instanceExtensionNames, title);
 
 	// Get list of PhysicalDevices (gpus) in the system
+	std::cout << "About to enumerate physical devices..." << std::endl;
 	std::vector<VkPhysicalDevice> gpuList;
 	enumeratePhysicalDevices(gpuList);
 	// Use the first GPU found for this exercise
 	if (gpuList.size() > 0)
 	{
+		std::cout << "About to handshake with device" <<std::endl;
 		handShakeWithDevice(&gpuList[0], layerNames, deviceExtensionNames);
 	}
 }
@@ -85,7 +98,9 @@ void VulkanApplication::initialize()
 VkResult VulkanApplication::enumeratePhysicalDevices(std::vector<VkPhysicalDevice>& gpuList)
 {
 	uint32_t gpuDeviceCount;
+	std::cout << "about to use instanceObj in enumeratePhysicalDevices" << std::endl;
 	vkEnumeratePhysicalDevices(instanceObj.instance, &gpuDeviceCount, nullptr);
+	std::cout << "Used instanceObj in enumeratePhysicalDevices" << std::endl;
 	gpuList.resize(gpuDeviceCount);
 	return vkEnumeratePhysicalDevices(instanceObj.instance, &gpuDeviceCount, gpuList.data());
 }

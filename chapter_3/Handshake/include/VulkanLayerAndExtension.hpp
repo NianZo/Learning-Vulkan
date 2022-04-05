@@ -20,6 +20,7 @@ struct LayerProperties
 class VulkanLayerAndExtension
 {
 public:
+	VulkanLayerAndExtension() {fillDbgReportCreateInfo();};
 	std::vector<const char*> instanceExtensionNames;
 	std::vector<const char*> instanceLayerNames;
 	// Layers and corresponding extension list
@@ -41,7 +42,8 @@ public:
 	VkDebugReportCallbackEXT debugReportCallback;
 	VkResult createDebugReportCallback();
 	void destroyDebugReportCallback();
-	VkDebugReportCallbackCreateInfoEXT dbgReportCreateInfo;
+	VkDebugReportCallbackCreateInfoEXT dbgReportCreateInfo = {};
+	void fillDbgReportCreateInfo();
 };
 
 

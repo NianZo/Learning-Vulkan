@@ -20,6 +20,7 @@ VkResult VulkanDevice::createDevice(std::vector<const char*>& layers, std::vecto
 	VkDeviceQueueCreateInfo queueInfo;
 	queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 	queueInfo.pNext = nullptr;
+	queueInfo.flags = 0;
 	queueInfo.queueFamilyIndex = graphicsQueueFamilyIndex;
 	queueInfo.queueCount = 1;
 	queueInfo.pQueuePriorities = queuePriorities;
@@ -27,6 +28,7 @@ VkResult VulkanDevice::createDevice(std::vector<const char*>& layers, std::vecto
 	VkDeviceCreateInfo deviceInfo;
 	deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	deviceInfo.pNext = nullptr;
+	deviceInfo.flags = 0;
 	deviceInfo.queueCreateInfoCount = 1;
 	deviceInfo.pQueueCreateInfos = &queueInfo;
 	deviceInfo.enabledLayerCount = 0; // Device layers are deprecated
