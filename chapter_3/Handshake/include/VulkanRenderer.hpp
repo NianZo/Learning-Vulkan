@@ -24,6 +24,10 @@ public:
 	void createPresentationWindow(int width, int height);
 	// method for handling window events
 
+	VulkanApplication* getApplication() {return application;}
+	VulkanDevice* getDevice() {return deviceObj;}
+	VulkanSwapChain* getSwapChain() {return swapChainObj;}
+
 	void createCommandPool();
 	void createSwapChain();
 	void createDepthImage();

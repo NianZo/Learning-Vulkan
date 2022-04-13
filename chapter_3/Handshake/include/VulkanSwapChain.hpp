@@ -35,7 +35,7 @@ struct SwapChainPrivateVariables
 	VkExtent2D swapChainExtent;
 
 	// Number of color images supported by the implementation
-	uint32_t desiredNumberofSwapChainImages;
+	uint32_t desiredNumberOfSwapChainImages;
 
 	VkSurfaceTransformFlagBitsKHR preTransform;
 
