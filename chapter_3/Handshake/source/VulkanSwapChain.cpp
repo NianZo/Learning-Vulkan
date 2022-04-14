@@ -225,7 +225,36 @@ void VulkanSwapChain::createSwapChainColorBufferImages()
 
 void VulkanSwapChain::createColorImageView(const VkCommandBuffer& cmd)
 {
+	VkResult result;
+	scPublicVars.colorBuffer.clear();
+	for (uint32_t i = 0; i < scPublicVars.swapchainImageCount; i++)
+	{
+		SwapChainBuffer scBuffer;
 
+		VkImageViewCreateInfo imgViewInfo;
+		imgViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		imgViewInfo.pNext = nullptr;
+		imgViewInfo.format = scPublicVars.format;
+		imgViewInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+		imgViewInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+		imgViewInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+		imgViewInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+		imgViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imgViewInfo.subresourceRange.baseMipLevel = 0;
+		imgViewInfo.subresourceRange.levelCount = 1;
+		imgViewInfo.subresourceRange.baseArrayLayer = 0;
+		imgViewInfo.subresourceRange.layerCount = 1;
+		imgViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		imgViewInfo.flags = 0;
+
+		scBuffer = scPrivateVars.swapchainImages[i];
+		// Since the swapchain is not owned by use we cannot set the image layout.
+		// Upon setting, the implementation (driver) may give error, the images were created by the WSI implementation not by us.
+		imgViewInfo.image = scBuffer.image;
+		result = vkCreateImageView(rendererObj->getDevice()->device, &imgViewInfo, nullptr, &scBuffer.view);
+		scPublicVars.colorBuffer.push_back(scBuffer);
+	}
+	scPublicVars.currentColorBuffer = 0;
 }
 
 

@@ -11,6 +11,9 @@
 #include "Header.hpp"
 #include "VulkanApplication.hpp"
 #include "VulkanSwapChain.hpp"
+#include "Wrapper.hpp"
+
+#define NUM_SAMPLES VK_SAMPLE_COUNT_1_BIT
 
 class VulkanRenderer
 {
