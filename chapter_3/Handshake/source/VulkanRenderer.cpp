@@ -6,12 +6,13 @@
  */
 
 #include "VulkanRenderer.hpp"
+#include "VulkanApplication.hpp"
 #include <iostream>
 
 VulkanRenderer::VulkanRenderer(VulkanApplication* app, VulkanDevice* deviceObject)
 {
-	assert(application != nullptr);
-	assert(deviceObj != nullptr);
+	assert(app != nullptr);
+	assert(deviceObject != nullptr);
 
 	// Note: very important to initialize with 0 or it will break the system
 	memset(&Depth, 0, sizeof(Depth));
@@ -81,6 +82,7 @@ void VulkanRenderer::buildSwapChainAndDepthImage()
 bool VulkanRenderer::render()
 {
 	// Do some more linux stuff here
+	std::cout << "VulkanRenderer::render()\n";
 	glfwPollEvents();
 	return glfwWindowShouldClose(window);
 }
@@ -152,6 +154,15 @@ void VulkanRenderer::createDepthImage()
 	result = vkBindImageMemory(deviceObj->device, Depth.image, Depth.mem, 0);
 	assert(result == VK_SUCCESS);
 
+	// Set image layout
+	CommandBufferMgr::allocCommandBuffer(&deviceObj->device, cmdPool, &cmdDepthImage);
+	CommandBufferMgr::beginCommandBuffer(cmdDepthImage);
+	{
+		setImageLayout(Depth.image, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, (VkAccessFlagBits) 0, cmdDepthImage);
+	}
+	CommandBufferMgr::endCommandBuffer(cmdDepthImage);
+	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdDepthImage);
+
 	VkImageViewCreateInfo imgViewInfo;
 	imgViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	imgViewInfo.pNext = nullptr;
@@ -165,16 +176,68 @@ void VulkanRenderer::createDepthImage()
 	imgViewInfo.subresourceRange.baseArrayLayer = 0;
 	imgViewInfo.subresourceRange.layerCount = 1;
 	imgViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-
 	if (depthFormat == VK_FORMAT_D16_UNORM_S8_UINT || depthFormat == VK_FORMAT_D24_UNORM_S8_UINT || depthFormat == VK_FORMAT_D32_SFLOAT_S8_UINT)
 	{
 		imgViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 	}
-
-	// Set image layout
-	CommandBufferMgr::allocCommandBuffer(&deviceObj->device, cmdPool, &cmdDepthImage);
-	CommandBufferMgr::beginCommandBuffer(cmdDepthImage);
+	imgViewInfo.image = Depth.image;
+	result = vkCreateImageView(deviceObj->device, &imgViewInfo, nullptr, &Depth.view);
+	assert(result == VK_SUCCESS);
 }
+
+void VulkanRenderer::setImageLayout(VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkAccessFlagBits srcAccessMask, const VkCommandBuffer& cmd)
+{
+	assert(cmd != VK_NULL_HANDLE);
+	assert(deviceObj->queue != VK_NULL_HANDLE);
+
+	VkImageMemoryBarrier imgMemoryBarrier;
+	imgMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	imgMemoryBarrier.pNext = nullptr;
+	imgMemoryBarrier.srcAccessMask = srcAccessMask;
+	imgMemoryBarrier.dstAccessMask = 0;
+	imgMemoryBarrier.oldLayout = oldImageLayout;
+	imgMemoryBarrier.newLayout = newImageLayout;
+	imgMemoryBarrier.image = image;
+	imgMemoryBarrier.subresourceRange.aspectMask = aspectMask;
+	imgMemoryBarrier.subresourceRange.baseMipLevel = 0;
+	imgMemoryBarrier.subresourceRange.levelCount = 1;
+	imgMemoryBarrier.subresourceRange.layerCount = 1;
+
+	if (oldImageLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+	{
+		imgMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	}
+
+	switch (newImageLayout)
+	{
+	// Ensure that anything that was copying from this image has completed
+	// An image in this layout can only be used as the destination operand of the commands
+	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+	case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
+		imgMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		break;
+	// Ensure any copy or cpu writes to image are flushed
+	// An image n this layout can only be used as a read-only shader resource
+	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+		imgMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		imgMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		break;
+	// An image in this layout can only be used as a frambuffer color attachment
+	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+		imgMemoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+		break;
+	// An image in this layout can only be used as a framebuffer depth/stencil attachment
+	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+		imgMemoryBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		break;
+	}
+
+	VkPipelineStageFlags srcStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+	VkPipelineStageFlags dstStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+	vkCmdPipelineBarrier(cmd, srcStages, dstStages, 0, 0, nullptr, 0, nullptr, 1, &imgMemoryBarrier);
+}
+
+
 
 
 

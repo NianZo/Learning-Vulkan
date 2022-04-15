@@ -58,7 +58,9 @@ project(${Recipe_Name})
 
 # Add preprocessor definitions here
 #add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
-
+find_package(glfw3 REQUIRED)
+link_libraries(glfw)
+#include_directories(AFTER /usr/include/GLFW)
 # Add 'vulkan-1' library for built Vulkan application
 #set(VULKAN_LINK_LIST "libvulkan")
 

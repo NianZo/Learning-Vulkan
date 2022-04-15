@@ -25,15 +25,17 @@ public:
 	VkQueue queue;
 	std::vector<VkQueueFamilyProperties> queueFamilyProps;
 	uint32_t graphicsQueueFamilyIndex;
+	uint32_t graphicsQueueWithPresentIndex;
 	uint32_t queueFamilyCount;
 	VulkanLayerAndExtension layerExtension;
 
 	VkResult createDevice(std::vector<const char*>& layers, std::vector<const char*>& extensions);
 	void destroyDevice();
 	void initializeDeviceQueue();
-	void memoryTypeFromProperties();
+	bool memoryTypeFromProperties(uint32_t typeBits, VkFlags requirementsMask, uint32_t* typeIndex);
 	void getGraphicsQueueHandle();
 	void getPhysicalDeviceQueuesAndProperties();
+	void getDeviceQueue();
 };
 
 #endif /* CHAPTER_3_HANDSHAKE_INCLUDE_VULKANDEVICE_HPP_ */

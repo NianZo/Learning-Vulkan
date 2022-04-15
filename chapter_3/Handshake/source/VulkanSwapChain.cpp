@@ -11,6 +11,7 @@
 #include "VulkanInstance.hpp"
 #include "VulkanRenderer.hpp"
 #include "VulkanApplication.hpp"
+#include <iostream>
 
 VulkanSwapChain::VulkanSwapChain(VulkanRenderer* renderer)
 {
@@ -23,6 +24,35 @@ VulkanSwapChain::~VulkanSwapChain()
 	scPrivateVars.swapchainImages.clear();
 	scPrivateVars.surfFormats.clear();
 	scPrivateVars.presentModes.clear();
+}
+
+void VulkanSwapChain::initializeSwapChain()
+{
+	VkResult result;
+	createSwapChainExtensions();
+	result = createSurface();
+	if (result == VK_ERROR_INITIALIZATION_FAILED) std::cout << "window surface initialization failed\n";
+	if (result == VK_ERROR_EXTENSION_NOT_PRESENT) std::cout << "window surface extension not present\n";
+	if (result == VK_ERROR_NATIVE_WINDOW_IN_USE_KHR) std::cout << "window surface in use\n";
+	assert(result == VK_SUCCESS);
+
+	uint32_t index = getGraphicsQueueWithPresentationSupport();
+	if (index == UINT32_MAX)
+	{
+		std::cout << "Could not find a graphics and present queue\nCould not find a graphics and present queue\n";
+		exit(-1);
+	}
+	rendererObj->getDevice()->graphicsQueueWithPresentIndex = index;
+
+	getSupportedFormats();
+}
+
+void VulkanSwapChain::createSwapChain(const VkCommandBuffer& cmd)
+{
+	getSurfaceCapabilitiesAndPresentMode();
+	managePresentMode();
+	createSwapChainColorImages();
+	createColorImageView(cmd);
 }
 
 VkResult VulkanSwapChain::createSwapChainExtensions()
@@ -111,7 +141,7 @@ uint32_t VulkanSwapChain::getGraphicsQueueWithPresentationSupport()
 	return graphicsQueueNodeIndex;
 }
 
-void VulkanSwapChain::getSupportedFormat()
+void VulkanSwapChain::getSupportedFormats()
 {
 	VkPhysicalDevice gpu = *rendererObj->getDevice()->gpu;
 	VkResult result;
@@ -193,7 +223,7 @@ void VulkanSwapChain::managePresentMode()
 	}
 }
 
-void VulkanSwapChain::createSwapChainColorBufferImages()
+void VulkanSwapChain::createSwapChainColorImages()
 {
 	VkSwapchainCreateInfoKHR scInfo;
 	scInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -247,7 +277,7 @@ void VulkanSwapChain::createColorImageView(const VkCommandBuffer& cmd)
 		imgViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		imgViewInfo.flags = 0;
 
-		scBuffer = scPrivateVars.swapchainImages[i];
+		scBuffer.image = scPrivateVars.swapchainImages[i];
 		// Since the swapchain is not owned by use we cannot set the image layout.
 		// Upon setting, the implementation (driver) may give error, the images were created by the WSI implementation not by us.
 		imgViewInfo.image = scBuffer.image;

@@ -12,6 +12,7 @@
 
 class CommandBufferMgr
 {
+public:
 	// Allocate memory for command buffers from the command pool
 	static void allocCommandBuffer(const VkDevice* device, const VkCommandPool cmdPool, VkCommandBuffer* cmdBuf, const VkCommandBufferAllocateInfo* commandBufferInfo = nullptr);
 

@@ -11,6 +11,7 @@
 std::vector<const char*> instanceExtensionNames =
 {
 		VK_KHR_SURFACE_EXTENSION_NAME,
+		"VK_KHR_xcb_surface",
 		//VK_KHR_WIN32_SURFACE_EXTENSION_NAME
 		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 		VK_EXT_DEBUG_UTILS_EXTENSION_NAME
@@ -45,11 +46,11 @@ std::vector<VkPhysicalDevice> gpuList;
 
 
 // Returns the Singleton object of VulkanApplication
-VulkanApplication& VulkanApplication::GetInstance()
+VulkanApplication* VulkanApplication::GetInstance()
 {
 	//static std::unique_ptr<VulkanApplication> instance = std::make_unique<VulkanApplication>();
 	static VulkanApplication instance;
-	return instance;
+	return &instance;
 }
 
 VulkanApplication::VulkanApplication()
@@ -93,6 +94,16 @@ void VulkanApplication::initialize()
 		std::cout << "About to handshake with device" <<std::endl;
 		handShakeWithDevice(&gpuList[0], layerNames, deviceExtensionNames);
 	}
+
+	std::cout << "About to create vulkan renderer\n";
+	rendererObj = new VulkanRenderer(this, deviceObj);
+	std::cout << "Just created vulkan renderer\n";
+	rendererObj->initialize();
+}
+
+bool VulkanApplication::render()
+{
+	return rendererObj->render();
 }
 
 VkResult VulkanApplication::enumeratePhysicalDevices(std::vector<VkPhysicalDevice>& gpuList)

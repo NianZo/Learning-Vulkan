@@ -68,8 +68,25 @@ void VulkanDevice::getGraphicsQueueHandle()
 }
 
 // Deferred until we talk about presentation and swapchains
-//void VulkanDevice::getDeviceQueue()
-//{
-//	vkGetDeviceQueue(device, graphicsQueueWithPresentIndex, 0, &queue);
-//}
+void VulkanDevice::getDeviceQueue()
+{
+	vkGetDeviceQueue(device, graphicsQueueWithPresentIndex, 0, &queue);
+}
+
+bool VulkanDevice::memoryTypeFromProperties(uint32_t typeBits, VkFlags requirementsMask, uint32_t* typeIndex)
+{
+	for (uint32_t i = 0; i < 32; i++)
+	{
+		if ((typeBits & 1) == 1)
+		{
+			if ((memoryProperties.memoryTypes[i].propertyFlags & requirementsMask) == requirementsMask)
+			{
+				*typeIndex = i;
+				return true;
+			}
+		}
+		typeBits >>= 1;
+	}
+	return false;
+}
 

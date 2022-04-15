@@ -9,7 +9,7 @@
 #define CHAPTER_3_HANDSHAKE_INCLUDE_VULKANRENDERER_HPP_
 
 #include "Header.hpp"
-#include "VulkanApplication.hpp"
+//#include "VulkanApplication.hpp"
 #include "VulkanSwapChain.hpp"
 #include "Wrapper.hpp"
 
@@ -26,6 +26,7 @@ public:
 
 	void createPresentationWindow(int width, int height);
 	// method for handling window events
+	void setImageLayout(VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkAccessFlagBits srcAccessMask, const VkCommandBuffer& cmd);
 
 	VulkanApplication* getApplication() {return application;}
 	VulkanDevice* getDevice() {return deviceObj;}

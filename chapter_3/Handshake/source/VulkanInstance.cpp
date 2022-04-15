@@ -10,6 +10,13 @@
 
 VkResult VulkanInstance::createInstance(std::vector<const char*>& layers, std::vector<const char*>& extensions, const char* const applicationName)
 {
+	unsigned int glfwExtensionCount = 0;
+	const char** glfwExtensions;
+	std::cout << "abotu to query extensions\n";
+	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount); // why does this not work and returns zero extensions?
+	std::cout << "queryied extensions:\n" << glfwExtensionCount << std::endl;
+	//printf("%s\n", glfwExtensions[0]);
+
 	// Set the instance specific layer and extension information
 	layerExtension.instanceExtensionNames = extensions;
 	layerExtension.instanceLayerNames = layers;

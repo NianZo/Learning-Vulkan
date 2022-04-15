@@ -89,12 +89,12 @@ public:
 
 private:
 	VkResult createSwapChainExtensions();
-	void getSupportedFormat();
+	void getSupportedFormats();
 	VkResult createSurface();
 	uint32_t getGraphicsQueueWithPresentationSupport();
 	void getSurfaceCapabilitiesAndPresentMode();
 	void managePresentMode();
-	void createSwapChainColorBufferImages();
+	void createSwapChainColorImages();
 	void createColorImageView(const VkCommandBuffer& cmd);
 
 	PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;

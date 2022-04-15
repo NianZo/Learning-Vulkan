@@ -11,24 +11,27 @@
 #include "VulkanInstance.hpp"
 #include "VulkanLayerAndExtension.hpp"
 #include "VulkanDevice.hpp"
+#include "VulkanRenderer.hpp"
 #include <mutex>
+
 
 class VulkanApplication
 {
 public:
 	~VulkanApplication();
 
-	static VulkanApplication& GetInstance();
+	static VulkanApplication* GetInstance();
 
 	// Program life cycle
 	void initialize(); // Initialize and allocate resources
 	void prepare(); // Prepare resources
 	void update(); // Update data
-	void render(); // Render primitives
+	bool render(); // Render primitives
 	void deInitialize(); // Release resources
 
 	VulkanInstance instanceObj;
 	VulkanDevice* deviceObj;
+	VulkanRenderer* rendererObj;
 	//static std::unique_ptr<VulkanApplication> instance;
 
 private:
