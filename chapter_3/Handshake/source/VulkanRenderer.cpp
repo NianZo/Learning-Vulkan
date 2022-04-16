@@ -60,6 +60,7 @@ void VulkanRenderer::initialize()
 
 	const bool includeDepth = true;
 	createRenderPass(includeDepth);
+	createFramebuffers(includeDepth);
 }
 
 void VulkanRenderer::createCommandPool()
@@ -319,6 +320,46 @@ void VulkanRenderer::createRenderPass(bool includeDepth, bool clear = true)
 void VulkanRenderer::destroyRenderPass()
 {
 	vkDestroyRenderPass(deviceObj->device, renderPass, nullptr);
+}
+
+void VulkanRenderer::createFramebuffers(bool includeDepth, bool clear = true)
+{
+	// Dependency on createDepthBuffer(), createRenderPass(), and recordSwapChain()
+	VkResult result;
+
+	VkImageView attachments[2];
+	attachments[1] = Depth.view;
+
+	VkFramebufferCreateInfo fbInfo;
+	fbInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	fbInfo.pNext = nullptr;
+	fbInfo.flags = 0;
+	fbInfo.renderPass = renderPass;
+	fbInfo.attachmentCount = includeDepth ? 2 : 1;
+	fbInfo.pAttachments = attachments;
+	fbInfo.width = width;
+	fbInfo.height = height;
+	fbInfo.layers = 1;
+
+	uint32_t i;
+	framebuffers.clear();
+	framebuffers.resize(swapChainObj->scPublicVars.swapchainImageCount);
+
+	for (i = 0; i < swapChainObj->scPublicVars.swapchainImageCount; i++)
+	{
+		attachments[0] = swapChainObj->scPublicVars.colorBuffer[i].view;
+		result = vkCreateFramebuffer(deviceObj->device, &fbInfo, nullptr, &framebuffers.at(i));
+		assert(result == VK_SUCCESS);
+	}
+}
+
+void VulkanRenderer::destroyFramebuffers()
+{
+	for (uint32_t i = 0; i < swapChainObj->scPublicVars.swapchainImageCount; i++)
+	{
+		vkDestroyFramebuffer(deviceObj->device, framebuffers.at(i), nullptr);
+	}
+	framebuffers.clear();
 }
 
 

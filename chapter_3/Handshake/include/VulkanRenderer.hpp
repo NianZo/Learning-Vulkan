@@ -69,6 +69,11 @@ public:
 	void createRenderPass(bool includeDepth, bool clear = true);
 	void destroyRenderPass();
 	VkRenderPass renderPass;
+
+	// Framebuffer stuff
+	void createFramebuffers(bool includeDepth, bool clear = true);
+	void destroyFramebuffers();
+	std::vector<VkFramebuffer> framebuffers;
 private:
 	// Class managers
 	VulkanSwapChain* swapChainObj;
