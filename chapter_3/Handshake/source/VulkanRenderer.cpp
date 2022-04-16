@@ -48,6 +48,8 @@ void VulkanRenderer::initialize()
 {
 	// Create an empty window with dimension 500x500
 	createPresentationWindow(500, 500);
+	width = 500;
+	height = 500;
 	// Initialize swapchain
 	swapChainObj->initializeSwapChain();
 
@@ -133,6 +135,7 @@ void VulkanRenderer::createDepthImage()
 	imageInfo.pQueueFamilyIndices = nullptr;
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.flags = 0;
 
 	result = vkCreateImage(deviceObj->device, &imageInfo, nullptr, &Depth.image);
@@ -203,12 +206,16 @@ void VulkanRenderer::setImageLayout(VkImage image, VkImageAspectFlags aspectMask
 	imgMemoryBarrier.subresourceRange.baseMipLevel = 0;
 	imgMemoryBarrier.subresourceRange.levelCount = 1;
 	imgMemoryBarrier.subresourceRange.layerCount = 1;
+	imgMemoryBarrier.srcQueueFamilyIndex = deviceObj->graphicsQueueFamilyIndex;
+	imgMemoryBarrier.dstQueueFamilyIndex = deviceObj->graphicsQueueFamilyIndex;
 
 	if (oldImageLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
 	{
 		imgMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 	}
 
+	VkPipelineStageFlags srcStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+	VkPipelineStageFlags dstStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT; // TODO validation layers are MUCH more picky about the stage used here
 	switch (newImageLayout)
 	{
 	// Ensure that anything that was copying from this image has completed
@@ -230,11 +237,10 @@ void VulkanRenderer::setImageLayout(VkImage image, VkImageAspectFlags aspectMask
 	// An image in this layout can only be used as a framebuffer depth/stencil attachment
 	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 		imgMemoryBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dstStages = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		break;
 	}
 
-	VkPipelineStageFlags srcStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-	VkPipelineStageFlags dstStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	vkCmdPipelineBarrier(cmd, srcStages, dstStages, 0, 0, nullptr, 0, nullptr, 1, &imgMemoryBarrier);
 }
 

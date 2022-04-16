@@ -18,6 +18,6 @@ int main(int argc, char** argv)
 	VulkanApplication* appObj = VulkanApplication::GetInstance();
 	appObj->initialize();
 
-	while(appObj->render()) {};
+	while(!appObj->render()) {};
 }
 
