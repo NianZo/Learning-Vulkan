@@ -63,6 +63,12 @@ public:
 
 	int width;
 	int height;
+
+	// Render pass stuff
+	void createRenderPassCB(bool includeDepth);
+	void createRenderPass(bool includeDepth, bool clear = true);
+	void destroyRenderPass();
+	VkRenderPass renderPass;
 private:
 	// Class managers
 	VulkanSwapChain* swapChainObj;

@@ -57,6 +57,9 @@ void VulkanRenderer::initialize()
 	createCommandPool();
 	// Let's create the swapchain color images
 	buildSwapChainAndDepthImage();
+
+	const bool includeDepth = true;
+	createRenderPass(includeDepth);
 }
 
 void VulkanRenderer::createCommandPool()
@@ -243,6 +246,91 @@ void VulkanRenderer::setImageLayout(VkImage image, VkImageAspectFlags aspectMask
 
 	vkCmdPipelineBarrier(cmd, srcStages, dstStages, 0, 0, nullptr, 0, nullptr, 1, &imgMemoryBarrier);
 }
+
+void VulkanRenderer::createRenderPass(bool includeDepth, bool clear = true)
+{
+	// Dependency on VulkanSwapChain::creatSwapChain() to get color image and
+	// VulkanRenderer::createDepthImage() to get the depth image
+	VkResult result;
+	// Attach the color buffer and depth buffer as attachments to the render pass instance
+	VkAttachmentDescription attachments[2];
+	attachments[0].format = swapChainObj->scPublicVars.format;
+	attachments[0].samples = NUM_SAMPLES;
+	attachments[0].loadOp = clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	attachments[0].flags = 0;
+
+	if (includeDepth)
+	{
+		attachments[1].flags = 0;
+		attachments[1].format = Depth.format;
+		attachments[1].samples = NUM_SAMPLES;
+		attachments[1].loadOp = clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+		attachments[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	}
+
+	// Define color buffer attachment binding point and layout info
+	VkAttachmentReference colorReference;
+	colorReference.attachment = 0;
+	colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	// Define depth buffer attachment binding point and layout info
+	VkAttachmentReference depthReference;
+	depthReference.attachment = 1;
+	depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	// Specify the attachments - color, depth, resolve, preserver, etc.
+	VkSubpassDescription subpass;
+	subpass.flags = 0;
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.inputAttachmentCount = 0;
+	subpass.pInputAttachments = nullptr;
+	subpass.colorAttachmentCount = 1;
+	subpass.pColorAttachments = &colorReference;
+	subpass.pResolveAttachments = nullptr;
+	subpass.pDepthStencilAttachment = includeDepth ? &depthReference : nullptr;
+	subpass.preserveAttachmentCount = 0;
+	subpass.pPreserveAttachments = nullptr;
+
+	// Specify the attachment and subpass associate with render pass
+	VkRenderPassCreateInfo rpInfo;
+	rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	rpInfo.pNext = nullptr;
+	rpInfo.flags = 0;
+	rpInfo.attachmentCount = includeDepth ? 2 : 1;
+	rpInfo.pAttachments = attachments;
+	rpInfo.subpassCount = 1;
+	rpInfo.pSubpasses = &subpass;
+	rpInfo.dependencyCount = 0;
+	rpInfo.pDependencies = nullptr;
+
+	result = vkCreateRenderPass(deviceObj->device, &rpInfo, nullptr, &renderPass);
+	assert(result == VK_SUCCESS);
+}
+
+void VulkanRenderer::destroyRenderPass()
+{
+	vkDestroyRenderPass(deviceObj->device, renderPass, nullptr);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
