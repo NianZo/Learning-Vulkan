@@ -6,6 +6,7 @@
  */
 
 #include "VulkanDevice.hpp"
+#include <iostream>
 
 VulkanDevice::VulkanDevice(VkPhysicalDevice* physicalDevice)
 {
@@ -16,6 +17,8 @@ VkResult VulkanDevice::createDevice(std::vector<const char*>& layers, std::vecto
 {
 	VkResult result;
 	float queuePriorities[1] = {0.0F};
+	assert(extensions.size() != 0);
+	std::cout << "device extensions[0]: " << extensions[0] << std::endl;
 
 	VkDeviceQueueCreateInfo queueInfo;
 	queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -40,6 +43,7 @@ VkResult VulkanDevice::createDevice(std::vector<const char*>& layers, std::vecto
 	result = vkCreateDevice(*gpu, &deviceInfo, nullptr, &device);
 
 	assert(result == VK_SUCCESS);
+	std::cout << "finished createDevice in VulkanDevice" << std::endl;
 	return result;
 }
 

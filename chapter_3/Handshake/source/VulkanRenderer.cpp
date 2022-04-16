@@ -33,7 +33,7 @@ VulkanRenderer::~VulkanRenderer()
 void VulkanRenderer::createPresentationWindow(const int windowWidth, const int windowHeight)
 {
 	// Do a linux thing here :)
-	glfwInit();
+	//glfwInit(); // TODO, this instance needs to query glfw for extensions, so it calls this first
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
@@ -62,6 +62,7 @@ void VulkanRenderer::createCommandPool()
 	VulkanDevice* deviceObj = application->deviceObj;
 	VkCommandPoolCreateInfo cmdPoolInfo;
 	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	cmdPoolInfo.flags = 0;
 	cmdPoolInfo.queueFamilyIndex = deviceObj->graphicsQueueWithPresentIndex;
 
 	vkCreateCommandPool(deviceObj->device, &cmdPoolInfo, nullptr, &cmdPool);
