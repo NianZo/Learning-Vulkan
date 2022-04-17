@@ -107,3 +107,65 @@ set_property(TARGET ${Recipe_Name} PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET ${Recipe_Name} PROPERTY C_STANDARD 99)
 set_property(TARGET ${Recipe_Name} PROPERTY C_STANDARD_REQUIRED ON)
 
+
+# BUILD_SPV_ON_COMPILE_TIME - accepted value ON or OFF
+# ON - Reads the GLSL shader file and auto convert into SPIR-V form (.spv)
+# This requires additional libraries support from VulkanSDK liike SPIRV glslang OGLCompiler OSDependent HLSL
+# OFF - Only reads .spv files, which need to be compiled offline using glslangValidator.exe.
+# For example: glslangValidator.exe <GLSL file name> -V -o <output filename in SPIR-V(.spv) form>
+option (BUILD_SPV_ON_COMPILE_TIME "BUILD_SPV_ON_COMPILE_TIME" OFF)
+if (BUILD_SPV_ON_COMPILE_TIME)
+
+	# Preprocessor flag allows the solution to use glslang library functions
+	add_definitions(-DAUTO_COMPILE_GLSL_TO_SPV)
+	
+	# GLSL - use Vulkan SDK's glslang library for compiling GLSL to SPV
+	# This does not require offline conversion of GLSL shader to SPIR-V(.spv) form
+	set(GLSLANGDIR "${VULKAN_PATH}/glslang")
+	
+	get_filename_component(GLSLANG_PREFIX "${GLSLANGDIR}" ABSOLUTE)
+	
+	# Check if glslang directory exists
+	if (NOT EXISTS ${GLSLANG_PREFIX})
+		message(FATAL_ERROR "Necessary glslang components do not exist: " ${GLSLANG_PREFIX})
+	endif()
+	
+	# Include the glslang directory
+	include_directories(${GLSLANG_PREFIX})
+	
+	# If compiling GLSL to SPV using we need the following libraries
+	set(GLSLANG_LIBS SPIRV glslang OGLCompiler OSDependent HLSL)
+	
+	# Generate the list of files to link, per flavor
+	foreach(x ${GLSLANG_LIBS})
+		list(APPEND VULKAN_LIB_LIST debug ${x}d optimized ${x})
+	endforeach()
+	
+	# Note: While configuring CMake for glslang we created the binaries in a "build" folder inside ${VULKAN_PATH}/glslang.
+	# Therefore, you must edit the below lines for your custom path like <Your binary path>/OGLCompilersDLL, <Your binary path>/OSDependent/Windows
+	set(VULKAN_GLSL_PATH /home/nic/Staging/VulkanSDK/1.3.204.1/source)
+	link_directories(${VULKAN_PATH}/glslang/build/OGLCompilersDLL)
+	link_directories(${VULKAN_PATH}/glslang/build/glslang/OSDependent/Windows)
+	link_directories(${VULKAN_PATH}/glslang/build/glslang)
+	link_directories(${VULKAN_PATH}/glslang/build/SPIRV)
+	link_directories(${VULKAN_PATH}/glslang/build/hlsl)
+	
+endif()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
