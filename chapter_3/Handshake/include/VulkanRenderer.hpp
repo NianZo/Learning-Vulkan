@@ -12,6 +12,7 @@
 //#include "VulkanApplication.hpp"
 #include "VulkanSwapChain.hpp"
 #include "Wrapper.hpp"
+#include "VulkanDrawable.hpp"
 
 #define NUM_SAMPLES VK_SAMPLE_COUNT_1_BIT
 
@@ -22,6 +23,7 @@ public:
 	~VulkanRenderer();
 
 	void initialize();
+	void prepare();
 	bool render();
 
 	void createPresentationWindow(int width, int height);
@@ -31,6 +33,7 @@ public:
 	VulkanApplication* getApplication() {return application;}
 	VulkanDevice* getDevice() {return deviceObj;}
 	VulkanSwapChain* getSwapChain() {return swapChainObj;}
+	VkCommandPool* getCommandPool() {return &cmdPool;}
 
 	void createCommandPool();
 	void createSwapChain();
@@ -80,6 +83,8 @@ private:
 	VulkanApplication* application;
 	// Device object associated with this presentation layer
 	VulkanDevice* deviceObj;
+
+	std::vector<VulkanDrawable*> drawableList;
 };
 
 #endif /* CHAPTER_3_HANDSHAKE_INCLUDE_VULKANRENDERER_HPP_ */

@@ -17,6 +17,7 @@ int main(int argc, char** argv)
 	// Create singleton object, calls VulkanApplication constructor
 	VulkanApplication* appObj = VulkanApplication::GetInstance();
 	appObj->initialize();
+	appObj->prepare();
 
 	while(!appObj->render()) {};
 }

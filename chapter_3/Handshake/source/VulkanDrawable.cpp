@@ -7,6 +7,9 @@
 
 #include "VulkanDrawable.hpp"
 #include "VulkanApplication.hpp"
+#include <thread>
+#include <chrono>
+#include <iostream>
 
 VulkanDrawable::VulkanDrawable(VulkanRenderer* parent)
 {
@@ -91,6 +94,120 @@ void VulkanDrawable::destroyVertexBuffer()
 	vkDestroyBuffer(deviceObj->device, VertexBuffer.buffer, nullptr);
 	vkFreeMemory(deviceObj->device, VertexBuffer.memory, nullptr);
 }
+
+void VulkanDrawable::prepare()
+{
+	VulkanDevice* deviceObj = rendererObj->getDevice();
+	vecCmdDraw.resize(rendererObj->getSwapChain()->scPublicVars.colorBuffer.size());
+	std::cout << "vecCmdDraw.size(): " << vecCmdDraw.size() << std::endl;
+	// Allocate command buffer per swapchain color image
+	for (int i = 0; i < rendererObj->getSwapChain()->scPublicVars.colorBuffer.size(); i++)
+	{
+		// Allocate, create, and start command buffer recording
+		CommandBufferMgr::allocCommandBuffer(&deviceObj->device, *rendererObj->getCommandPool(), &vecCmdDraw[i]);
+		CommandBufferMgr::beginCommandBuffer(vecCmdDraw[i]);
+
+		// Create the render pass instance
+		recordCommandBuffer(i, &vecCmdDraw[i]);
+
+		// Finish command buffer recording
+		CommandBufferMgr::endCommandBuffer(vecCmdDraw[i]);
+	}
+}
+
+void VulkanDrawable::render()
+{
+	VulkanDevice* deviceObj = rendererObj->getDevice();
+	VulkanSwapChain* swapChainObj = rendererObj->getSwapChain();
+	uint32_t& currentColorImage = swapChainObj->scPublicVars.currentColorBuffer;
+	VkSwapchainKHR& swapChain = swapChainObj->scPublicVars.swapChain;
+
+	// vkAcquireNextImageKHR requires either a valid fence or semaphore
+	VkSemaphore presentCompleteSemaphore;
+	VkSemaphoreCreateInfo presentCompleteSemaphoreCreateInfo;
+	presentCompleteSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	presentCompleteSemaphoreCreateInfo.pNext = nullptr;
+	presentCompleteSemaphoreCreateInfo.flags = 0;
+	vkCreateSemaphore(deviceObj->device, &presentCompleteSemaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	// Get index of next available swapchain image
+	VkResult result = swapChainObj->fpAcquireNextImageKHR(deviceObj->device, swapChain, UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &currentColorImage);
+
+	std::cout << "currentColorImage index: " << currentColorImage << std::endl;
+	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &vecCmdDraw[currentColorImage], VK_NULL_HANDLE);
+
+	// Present the image in the window
+	VkPresentInfoKHR presentInfo;
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.pNext = nullptr;
+	presentInfo.waitSemaphoreCount = 0;
+	presentInfo.pWaitSemaphores = nullptr;
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &swapChain;
+	presentInfo.pImageIndices = &currentColorImage;
+	presentInfo.pResults = nullptr;
+	result = swapChainObj->fpQueuePresentKHR(deviceObj->queue, &presentInfo);
+	assert(result == VK_SUCCESS);
+}
+
+void VulkanDrawable::recordCommandBuffer(int currentImage, VkCommandBuffer* cmdDraw)
+{
+	// Specify clear color value
+	VkClearValue clearValues[2];
+	switch (currentImage)
+	{
+	case 0:
+		clearValues[0].color = {1.0f, 0.0f, 0.0f, 1.0f};
+		break;
+	case 1:
+		clearValues[0].color = {0.0f, 1.0f, 0.0f, 1.0f};
+		break;
+	case 2:
+		clearValues[0].color = {0.0f, 0.0f, 1.0f, 1.0f};
+		break;
+	default:
+		clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
+		break;
+	}
+	clearValues[1].depthStencil.depth = 1.0f;
+	clearValues[1].depthStencil.stencil = 0;
+
+	VkRenderPassBeginInfo rpBegin;
+	rpBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	rpBegin.pNext = nullptr;
+	rpBegin.renderPass = rendererObj->renderPass;
+	rpBegin.framebuffer = rendererObj->framebuffers[currentImage];
+	rpBegin.renderArea.extent.width = rendererObj->width;
+	rpBegin.renderArea.extent.height = rendererObj->height;
+	rpBegin.renderArea.offset.x = 0;
+	rpBegin.renderArea.offset.y = 0;
+	rpBegin.clearValueCount = 2;
+	rpBegin.pClearValues = clearValues;
+
+	vkCmdBeginRenderPass(*cmdDraw, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
+
+	vkCmdEndRenderPass(*cmdDraw);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -101,6 +101,11 @@ void VulkanApplication::initialize()
 	rendererObj->initialize();
 }
 
+void VulkanApplication::prepare()
+{
+	rendererObj->prepare();
+}
+
 bool VulkanApplication::render()
 {
 	return rendererObj->render();

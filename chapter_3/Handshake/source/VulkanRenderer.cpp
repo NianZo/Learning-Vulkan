@@ -22,6 +22,8 @@ VulkanRenderer::VulkanRenderer(VulkanApplication* app, VulkanDevice* deviceObjec
 	deviceObj = deviceObject;
 
 	swapChainObj = new VulkanSwapChain(this);
+	VulkanDrawable* drawableObj = new VulkanDrawable(this);
+	drawableList.push_back(drawableObj);
 }
 
 VulkanRenderer::~VulkanRenderer()
@@ -86,10 +88,22 @@ void VulkanRenderer::buildSwapChainAndDepthImage()
 	createDepthImage();
 }
 
+void VulkanRenderer::prepare()
+{
+	for (VulkanDrawable* drawableObj : drawableList)
+	{
+		drawableObj->prepare();
+	}
+}
+
 bool VulkanRenderer::render()
 {
 	// Do some more linux stuff here
 	std::cout << "VulkanRenderer::render()\n";
+	for (VulkanDrawable* drawableObj : drawableList)
+	{
+		drawableObj->render();
+	}
 	glfwPollEvents();
 	return glfwWindowShouldClose(window);
 }
@@ -248,7 +262,7 @@ void VulkanRenderer::setImageLayout(VkImage image, VkImageAspectFlags aspectMask
 	vkCmdPipelineBarrier(cmd, srcStages, dstStages, 0, 0, nullptr, 0, nullptr, 1, &imgMemoryBarrier);
 }
 
-void VulkanRenderer::createRenderPass(bool includeDepth, bool clear = true)
+void VulkanRenderer::createRenderPass(bool includeDepth, bool clear)
 {
 	// Dependency on VulkanSwapChain::creatSwapChain() to get color image and
 	// VulkanRenderer::createDepthImage() to get the depth image
@@ -261,8 +275,10 @@ void VulkanRenderer::createRenderPass(bool includeDepth, bool clear = true)
 	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 	attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	//attachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	//attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 	attachments[0].flags = 0;
 
 	if (includeDepth)
@@ -281,7 +297,7 @@ void VulkanRenderer::createRenderPass(bool includeDepth, bool clear = true)
 	// Define color buffer attachment binding point and layout info
 	VkAttachmentReference colorReference;
 	colorReference.attachment = 0;
-	colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // TODO is this wrong too?
 
 	// Define depth buffer attachment binding point and layout info
 	VkAttachmentReference depthReference;
@@ -322,7 +338,7 @@ void VulkanRenderer::destroyRenderPass()
 	vkDestroyRenderPass(deviceObj->device, renderPass, nullptr);
 }
 
-void VulkanRenderer::createFramebuffers(bool includeDepth, bool clear = true)
+void VulkanRenderer::createFramebuffers(bool includeDepth, bool clear)
 {
 	// Dependency on createDepthBuffer(), createRenderPass(), and recordSwapChain()
 	VkResult result;
