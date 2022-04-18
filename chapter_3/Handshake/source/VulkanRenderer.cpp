@@ -7,6 +7,7 @@
 
 #include "VulkanRenderer.hpp"
 #include "VulkanApplication.hpp"
+#include "MeshData.hpp"
 #include <iostream>
 
 VulkanRenderer::VulkanRenderer(VulkanApplication* app, VulkanDevice* deviceObject)
@@ -378,7 +379,62 @@ void VulkanRenderer::destroyFramebuffers()
 	framebuffers.clear();
 }
 
+void VulkanRenderer::createPipelineStateManagement()
+{
+	// Create the pipeline cache
+	pipelineObj.createPipelineCache();
 
+	const bool depthPresent = true;
+	for (VulkanDrawable* drawableObj : drawableList)
+	{
+		VkPipeline* pipeline = (VkPipeline*)malloc(sizeof(VkPipeline));
+		if (pipelineObj.createPipeline(drawableObj, pipeline, &shaderObj, depthPresent))
+		{
+			pipelineList.push_back(pipeline);
+			drawableObj->setPipeline(pipeline);
+		}
+		else
+		{
+			free(pipeline);
+			pipeline = nullptr;
+		}
+	}
+}
+
+void VulkanRenderer::destroyPipeline()
+{
+	for (VkPipeline* pipeline : pipelineList)
+	{
+		vkDestroyPipeline(deviceObj->device, *pipeline, nullptr);
+		free(pipeline);
+	}
+	pipelineList.clear();
+}
+
+void VulkanRenderer::createVertexBuffer()
+{
+	CommandBufferMgr::allocCommandBuffer(&deviceObj->device, cmdPool, &cmdVertexBuffer);
+	CommandBufferMgr::beginCommandBuffer(cmdVertexBuffer);
+
+	for (VulkanDrawable* drawableObj : drawableList)
+	{
+		drawableObj->createVertexBuffer(triangleData.data(), sizeof(triangleData), sizeof(triangleData[0]), false);
+	}
+	CommandBufferMgr::endCommandBuffer(cmdVertexBuffer);
+	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdVertexBuffer);
+}
+
+void VulkanRenderer::createShaders()
+{
+	void* vertShaderCode;
+	void* fragShaderCode;
+	size_t sizeVert, sizeFrag;
+
+	vertShaderCode = readFile("./../Draw-vert.spv", &sizeVert);
+	fragShaderCode = readFile("./../Draw-frag.spv", &sizeFrag);
+
+	shaderObj.buildShaderModuleWithSPV((uint32_t*)vertShaderCode, sizeVert, (uint32_t*)fragShaderCode, sizeFrag);
+}
 
 
 

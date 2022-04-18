@@ -25,6 +25,8 @@ public:
 	// Allocate, create, record command buffer
 	void prepare();
 	void render();
+	void setPipeline(VkPipeline* vulkanPipeline) {pipeline = vulkanPipeline;}
+	VkPipeline* getPipeline() {return pipeline;}
 
 	// Structure storing vertex buffer metadata
 	struct {
@@ -44,6 +46,8 @@ private:
 	std::vector<VkCommandBuffer> vecCmdDraw;
 	// Prepares render pass instance
 	void recordCommandBuffer(int currentImage, VkCommandBuffer* cmdDraw);
+
+	VkPipeline* pipeline;
 };
 
 #endif /* CHAPTER_3_HANDSHAKE_INCLUDE_VULKANDRAWABLE_HPP_ */

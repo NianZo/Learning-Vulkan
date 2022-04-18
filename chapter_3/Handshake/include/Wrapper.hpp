@@ -26,5 +26,6 @@ public:
 	static void submitCommandBuffer(const VkQueue& queue, const VkCommandBuffer* cmdBufList, const VkSubmitInfo* submitInfo = nullptr, const VkFence& fence = VK_NULL_HANDLE);
 };
 
+void* readFile(const char* spvFileName, size_t* fileSize);
 
 #endif /* CHAPTER_3_HANDSHAKE_INCLUDE_WRAPPER_HPP_ */

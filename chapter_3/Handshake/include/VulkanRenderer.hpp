@@ -13,6 +13,8 @@
 #include "VulkanSwapChain.hpp"
 #include "Wrapper.hpp"
 #include "VulkanDrawable.hpp"
+#include "VulkanShader.hpp"
+#include "VulkanPipeline.hpp"
 
 #define NUM_SAMPLES VK_SAMPLE_COUNT_1_BIT
 
@@ -34,6 +36,8 @@ public:
 	VulkanDevice* getDevice() {return deviceObj;}
 	VulkanSwapChain* getSwapChain() {return swapChainObj;}
 	VkCommandPool* getCommandPool() {return &cmdPool;}
+	VulkanShader* getShader() {return &shaderObj;}
+	VulkanPipeline* getPipelineObject() {return &pipelineObj;}
 
 	void createCommandPool();
 	void createSwapChain();
@@ -63,6 +67,7 @@ public:
 
 	VkCommandBuffer cmdDepthImage;
 	VkCommandPool cmdPool;
+	VkCommandBuffer cmdVertexBuffer;
 
 	int width;
 	int height;
@@ -77,6 +82,12 @@ public:
 	void createFramebuffers(bool includeDepth, bool clear = true);
 	void destroyFramebuffers();
 	std::vector<VkFramebuffer> framebuffers;
+	std::vector<VkPipeline*> pipelineList;
+
+	void createVertexBuffer();
+	void createShaders();
+	void createPipelineStateManagement();
+	void destroyPipeline();
 private:
 	// Class managers
 	VulkanSwapChain* swapChainObj;
@@ -85,6 +96,8 @@ private:
 	VulkanDevice* deviceObj;
 
 	std::vector<VulkanDrawable*> drawableList;
+	VulkanShader shaderObj;
+	VulkanPipeline pipelineObj;
 };
 
 #endif /* CHAPTER_3_HANDSHAKE_INCLUDE_VULKANRENDERER_HPP_ */
