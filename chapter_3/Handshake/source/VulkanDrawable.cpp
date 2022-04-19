@@ -16,6 +16,20 @@ VulkanDrawable::VulkanDrawable(VulkanRenderer* parent)
 	// "Note: It's very important to initialize the member with 0 or respective value otherwise it will break the system"
 	memset(&VertexBuffer, 0, sizeof(VertexBuffer));
 	rendererObj = parent;
+
+	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->deviceObj;
+
+	VkSemaphoreCreateInfo presentCompleteSemaphoreCreateInfo;
+	presentCompleteSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	presentCompleteSemaphoreCreateInfo.pNext = nullptr;
+	presentCompleteSemaphoreCreateInfo.flags = 0;
+	vkCreateSemaphore(deviceObj->device, &presentCompleteSemaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
+
+	VkSemaphoreCreateInfo drawingCompleteSemaphoreCreateInfo;
+	drawingCompleteSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	drawingCompleteSemaphoreCreateInfo.pNext = nullptr;
+	drawingCompleteSemaphoreCreateInfo.flags = 0;
+	vkCreateSemaphore(deviceObj->device, &drawingCompleteSemaphoreCreateInfo, nullptr, &drawingCompleteSemaphore);
 }
 
 void VulkanDrawable::createVertexBuffer(const void* vertexData, uint32_t dataSize, uint32_t dataStride, bool useTexture)
@@ -123,27 +137,36 @@ void VulkanDrawable::render()
 	VkSwapchainKHR& swapChain = swapChainObj->scPublicVars.swapChain;
 
 	// vkAcquireNextImageKHR requires either a valid fence or semaphore
-	VkSemaphore presentCompleteSemaphore;
-	VkSemaphoreCreateInfo presentCompleteSemaphoreCreateInfo;
-	presentCompleteSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	presentCompleteSemaphoreCreateInfo.pNext = nullptr;
-	presentCompleteSemaphoreCreateInfo.flags = 0;
-	vkCreateSemaphore(deviceObj->device, &presentCompleteSemaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
+	//VkSemaphore presentCompleteSemaphore;
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	// Get index of next available swapchain image
 	VkResult result = swapChainObj->fpAcquireNextImageKHR(deviceObj->device, swapChain, UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &currentColorImage);
 
+	VkPipelineStageFlags submitPipelineStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+	VkSubmitInfo submitInfo;
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.pNext = nullptr;
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = &presentCompleteSemaphore;
+	submitInfo.pWaitDstStageMask = &submitPipelineStages;
+	submitInfo.commandBufferCount = (uint32_t) sizeof(&vecCmdDraw[currentColorImage]) / sizeof(VkCommandBuffer);
+	submitInfo.pCommandBuffers = &vecCmdDraw[currentColorImage];
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &drawingCompleteSemaphore;
+
 	std::cout << "currentColorImage index: " << currentColorImage << std::endl;
-	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &vecCmdDraw[currentColorImage], VK_NULL_HANDLE);
+	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &vecCmdDraw[currentColorImage], &submitInfo);
 
 	// Present the image in the window
 	VkPresentInfoKHR presentInfo;
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = nullptr;
 	presentInfo.waitSemaphoreCount = 0;
-	presentInfo.pWaitSemaphores = nullptr;
+	presentInfo.pWaitSemaphores = &drawingCompleteSemaphore;
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &swapChain;
 	presentInfo.pImageIndices = &currentColorImage;
@@ -188,7 +211,37 @@ void VulkanDrawable::recordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 
 	vkCmdBeginRenderPass(*cmdDraw, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
 
+	vkCmdBindPipeline(*cmdDraw, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
+
+	const VkDeviceSize offsets[1] = { 0 };
+	vkCmdBindVertexBuffers(*cmdDraw, 0, 1, &VertexBuffer.buffer, offsets);
+
+	initViewports(cmdDraw);
+	initScissors(cmdDraw);
+
+	vkCmdDraw(*cmdDraw, 3, 1, 0, 0);
+
 	vkCmdEndRenderPass(*cmdDraw);
+}
+
+void VulkanDrawable::initViewports(VkCommandBuffer* cmd)
+{
+	viewport.height = (float) rendererObj->height;
+	viewport.width = (float) rendererObj->width;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	viewport.x = 0;
+	viewport.y = 0;
+	vkCmdSetViewport(*cmd, 0, NUMBER_OF_VIEWPORTS, &viewport);
+}
+
+void VulkanDrawable::initScissors(VkCommandBuffer* cmd)
+{
+	scissor.extent.width = rendererObj->width;
+	scissor.extent.height = rendererObj->height;
+	scissor.offset.x = 0;
+	scissor.offset.y = 0;
+	vkCmdSetScissor(*cmd, 0, NUMBER_OF_SCISSORS, &scissor);
 }
 
 

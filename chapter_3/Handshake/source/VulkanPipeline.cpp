@@ -47,10 +47,20 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	vertexInputStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInputStateInfo.pNext = nullptr;
 	vertexInputStateInfo.flags = 0;
-	vertexInputStateInfo.vertexBindingDescriptionCount = 1;
-	vertexInputStateInfo.pVertexBindingDescriptions = &drawableObj->viIpBind;
-	vertexInputStateInfo.vertexAttributeDescriptionCount = 2;
-	vertexInputStateInfo.pVertexAttributeDescriptions = drawableObj->viIpAttrib;
+	if (includeVi)
+	{
+		vertexInputStateInfo.vertexBindingDescriptionCount = 1;
+		vertexInputStateInfo.pVertexBindingDescriptions = &drawableObj->viIpBind;
+		vertexInputStateInfo.vertexAttributeDescriptionCount = 2;
+		vertexInputStateInfo.pVertexAttributeDescriptions = drawableObj->viIpAttrib;
+	} else
+	{
+		vertexInputStateInfo.vertexBindingDescriptionCount = 0;
+		vertexInputStateInfo.pVertexBindingDescriptions = nullptr;
+		vertexInputStateInfo.vertexAttributeDescriptionCount = 0;
+		vertexInputStateInfo.pVertexAttributeDescriptions = nullptr;
+	}
+
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
 	inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -66,7 +76,7 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	rasterStateInfo.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterStateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
 	rasterStateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
-	rasterStateInfo.depthClampEnable = includeDepth;
+	rasterStateInfo.depthClampEnable = VK_FALSE; //includeDepth; // This device feature is disabled
 	rasterStateInfo.rasterizerDiscardEnable = VK_FALSE;
 	rasterStateInfo.depthBiasEnable = VK_FALSE;
 	rasterStateInfo.depthBiasConstantFactor = 0;
@@ -136,6 +146,16 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	multisampleStateInfo.alphaToCoverageEnable = VK_FALSE;
 	multisampleStateInfo.alphaToOneEnable = VK_FALSE;
 
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo;
+	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutCreateInfo.pNext = nullptr;
+	pipelineLayoutCreateInfo.flags = 0;
+	pipelineLayoutCreateInfo.setLayoutCount = 0;
+	pipelineLayoutCreateInfo.pSetLayouts = nullptr;
+	pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+	pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+	vkCreatePipelineLayout(deviceObj->device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
+
 	// Actual pipeline creation
 	VkGraphicsPipelineCreateInfo pipelineInfo;
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -154,6 +174,9 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	pipelineInfo.pDynamicState = &dynamicState;
 	pipelineInfo.renderPass = appObj->rendererObj->renderPass;
 	pipelineInfo.subpass = 0;
+	pipelineInfo.layout = pipelineLayout;
+	pipelineInfo.basePipelineHandle = 0;
+	pipelineInfo.basePipelineIndex = 0;
 
 	return (vkCreateGraphicsPipelines(deviceObj->device, pipelineCache, 1, &pipelineInfo, nullptr, pipeline) == VK_SUCCESS);
 }

@@ -32,12 +32,12 @@ void VulkanShader::buildShaderModuleWithSPV(uint32_t* vertShaderText, size_t ver
 	result = vkCreateShaderModule(deviceObj->device, &vertCreateInfo, nullptr, &shaderStages[0].module);
 	assert(result == VK_SUCCESS);
 
-	shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	shaderStages[0].pNext = nullptr;
-	shaderStages[0].flags = 0;
-	shaderStages[0].pSpecializationInfo = nullptr;
-	shaderStages[0].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	shaderStages[0].pName = "main";
+	shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	shaderStages[1].pNext = nullptr;
+	shaderStages[1].flags = 0;
+	shaderStages[1].pSpecializationInfo = nullptr;
+	shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	shaderStages[1].pName = "main";
 
 	VkShaderModuleCreateInfo fragCreateInfo;
 	fragCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

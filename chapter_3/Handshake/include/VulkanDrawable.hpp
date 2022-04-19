@@ -25,6 +25,9 @@ public:
 	// Allocate, create, record command buffer
 	void prepare();
 	void render();
+	void initViewports(VkCommandBuffer* cmd);
+	void initScissors(VkCommandBuffer* cmd);
+
 	void setPipeline(VkPipeline* vulkanPipeline) {pipeline = vulkanPipeline;}
 	VkPipeline* getPipeline() {return pipeline;}
 
@@ -44,6 +47,12 @@ public:
 private:
 	// Command buffer for drawing
 	std::vector<VkCommandBuffer> vecCmdDraw;
+
+	VkViewport viewport;
+	VkRect2D scissor;
+	VkSemaphore presentCompleteSemaphore;
+	VkSemaphore drawingCompleteSemaphore;
+
 	// Prepares render pass instance
 	void recordCommandBuffer(int currentImage, VkCommandBuffer* cmdDraw);
 

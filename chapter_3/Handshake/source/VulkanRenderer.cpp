@@ -60,10 +60,13 @@ void VulkanRenderer::initialize()
 	createCommandPool();
 	// Let's create the swapchain color images
 	buildSwapChainAndDepthImage();
-
+	createVertexBuffer();
 	const bool includeDepth = true;
 	createRenderPass(includeDepth);
 	createFramebuffers(includeDepth);
+
+	createShaders();
+	createPipelineStateManagement();
 }
 
 void VulkanRenderer::createCommandPool()
