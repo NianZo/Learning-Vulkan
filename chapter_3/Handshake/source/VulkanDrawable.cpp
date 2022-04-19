@@ -140,7 +140,7 @@ void VulkanDrawable::render()
 	//VkSemaphore presentCompleteSemaphore;
 
 
-	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	// Get index of next available swapchain image
 	VkResult result = swapChainObj->fpAcquireNextImageKHR(deviceObj->device, swapChain, UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &currentColorImage);
@@ -165,7 +165,7 @@ void VulkanDrawable::render()
 	VkPresentInfoKHR presentInfo;
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = nullptr;
-	presentInfo.waitSemaphoreCount = 0;
+	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pWaitSemaphores = &drawingCompleteSemaphore;
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &swapChain;
