@@ -109,6 +109,83 @@ void VulkanDrawable::destroyVertexBuffer()
 	vkFreeMemory(deviceObj->device, VertexBuffer.memory, nullptr);
 }
 
+void VulkanDrawable::createIndexBuffer(const void* indexData, uint32_t dataSize, uint32_t dataStride)
+{
+	VulkanApplication* appObj = VulkanApplication::GetInstance();
+	VulkanDevice* deviceObj = appObj->deviceObj;
+
+	VkResult result;
+	bool pass;
+
+	//Create the buffer resource metadata information
+	VkBufferCreateInfo bufInfo;
+	bufInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufInfo.pNext = nullptr;
+	bufInfo.flags = 0;
+	bufInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+	bufInfo.size = dataSize;
+	bufInfo.queueFamilyIndexCount = 0; // TODO wtf
+	bufInfo.pQueueFamilyIndices = nullptr;
+	bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	result = vkCreateBuffer(deviceObj->device, &bufInfo, nullptr, &IndexBuffer.buffer);
+	assert(result == VK_SUCCESS);
+
+	VkMemoryRequirements memRqrmnt;
+	vkGetBufferMemoryRequirements(deviceObj->device, IndexBuffer.buffer, &memRqrmnt);
+
+	// Allocate buffer memory
+	VkMemoryAllocateInfo allocInfo;
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.pNext = nullptr;
+	allocInfo.memoryTypeIndex = 0;
+	allocInfo.allocationSize = memRqrmnt.size;
+
+	pass = deviceObj->memoryTypeFromProperties(memRqrmnt.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &allocInfo.memoryTypeIndex);
+	assert(pass == true);
+	result = vkAllocateMemory(deviceObj->device, &allocInfo, nullptr, &IndexBuffer.memory);
+	assert(result == VK_SUCCESS);
+
+	IndexBuffer.bufferInfo.range = memRqrmnt.size;
+	IndexBuffer.bufferInfo.offset = 0;
+
+	// Map memory
+	uint8_t* pData;
+	result = vkMapMemory(deviceObj->device, IndexBuffer.memory, 0, memRqrmnt.size, 0, (void**)&pData);
+	assert(result == VK_SUCCESS);
+
+	// Copy data to mapped memory
+	memcpy(pData, indexData, dataSize);
+
+	// Unmap device memory
+	vkUnmapMemory(deviceObj->device, IndexBuffer.memory);
+
+	// Bind buffer to device memory
+	result = vkBindBufferMemory(deviceObj->device, IndexBuffer.buffer, IndexBuffer.memory, 0);
+	assert(result == VK_SUCCESS);
+
+//	viIpBind.binding = 0;
+//	viIpBind.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+//	viIpBind.stride = dataStride;
+//
+//	viIpAttrib[0].binding = 0;
+//	viIpAttrib[0].location = 0;
+//	viIpAttrib[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+//	viIpAttrib[0].offset = 0;
+//	viIpAttrib[1].binding = 0;
+//	viIpAttrib[1].location = 1;
+//	viIpAttrib[1].format = useTexture ? VK_FORMAT_R32G32_SFLOAT : VK_FORMAT_R32G32B32A32_SFLOAT;
+//	viIpAttrib[1].offset = 16;
+}
+
+void VulkanDrawable::destroyIndexBuffer()
+{
+	VulkanDevice* deviceObj = rendererObj->getDevice();
+
+	vkDestroyBuffer(deviceObj->device, IndexBuffer.buffer, nullptr);
+	vkFreeMemory(deviceObj->device, IndexBuffer.memory, nullptr);
+}
+
 void VulkanDrawable::prepare()
 {
 	VulkanDevice* deviceObj = rendererObj->getDevice();
@@ -216,10 +293,13 @@ void VulkanDrawable::recordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 	const VkDeviceSize offsets[1] = { 0 };
 	vkCmdBindVertexBuffers(*cmdDraw, 0, 1, &VertexBuffer.buffer, offsets);
 
+	vkCmdBindIndexBuffer(*cmdDraw, IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+
 	initViewports(cmdDraw);
 	initScissors(cmdDraw);
 
-	vkCmdDraw(*cmdDraw, 3, 1, 0, 0);
+	//vkCmdDraw(*cmdDraw, 3, 1, 0, 0);
+	vkCmdDrawIndexed(*cmdDraw, 6, 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(*cmdDraw);
 }

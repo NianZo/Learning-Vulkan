@@ -74,7 +74,7 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	rasterStateInfo.pNext = nullptr;
 	rasterStateInfo.flags = 0;
 	rasterStateInfo.polygonMode = VK_POLYGON_MODE_FILL;
-	rasterStateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterStateInfo.cullMode = VK_CULL_MODE_NONE; //VK_CULL_MODE_BACK_BIT; // Changed for testing
 	rasterStateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	rasterStateInfo.depthClampEnable = VK_FALSE; //includeDepth; // This device feature is disabled
 	rasterStateInfo.rasterizerDiscardEnable = VK_FALSE;

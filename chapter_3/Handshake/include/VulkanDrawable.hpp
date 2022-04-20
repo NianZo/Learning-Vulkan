@@ -19,7 +19,9 @@ public:
 	~VulkanDrawable();
 
 	void createVertexBuffer(const void* vertexData, uint32_t dataSize, uint32_t dataStride, bool useTexture);
+	void createIndexBuffer(const void* vertexData, uint32_t dataSize, uint32_t dataStride);
 	void destroyVertexBuffer();
+	void destroyIndexBuffer();
 
 	// Prepares the drawing object befoer rendering
 	// Allocate, create, record command buffer
@@ -37,6 +39,12 @@ public:
 		VkDeviceMemory memory;
 		VkDescriptorBufferInfo bufferInfo;
 	} VertexBuffer;
+
+	struct {
+		VkBuffer buffer;
+		VkDeviceMemory memory;
+		VkDescriptorBufferInfo bufferInfo;
+	} IndexBuffer;
 
 	// Stores the vertex input rate
 	VkVertexInputBindingDescription viIpBind;

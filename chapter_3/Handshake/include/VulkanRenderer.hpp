@@ -68,6 +68,7 @@ public:
 	VkCommandBuffer cmdDepthImage;
 	VkCommandPool cmdPool;
 	VkCommandBuffer cmdVertexBuffer;
+	VkCommandBuffer cmdIndexBuffer;
 
 	int width;
 	int height;
@@ -85,6 +86,7 @@ public:
 	std::vector<VkPipeline*> pipelineList;
 
 	void createVertexBuffer();
+	void createIndexBuffer();
 	void createShaders();
 	void createPipelineStateManagement();
 	void destroyPipeline();

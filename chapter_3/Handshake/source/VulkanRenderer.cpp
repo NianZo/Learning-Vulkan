@@ -61,6 +61,7 @@ void VulkanRenderer::initialize()
 	// Let's create the swapchain color images
 	buildSwapChainAndDepthImage();
 	createVertexBuffer();
+	createIndexBuffer();
 	const bool includeDepth = true;
 	createRenderPass(includeDepth);
 	createFramebuffers(includeDepth);
@@ -421,10 +422,23 @@ void VulkanRenderer::createVertexBuffer()
 
 	for (VulkanDrawable* drawableObj : drawableList)
 	{
-		drawableObj->createVertexBuffer(triangleData.data(), sizeof(triangleData), sizeof(triangleData[0]), false);
+		drawableObj->createVertexBuffer(squareData.data(), sizeof(squareData), sizeof(squareData[0]), false);
 	}
 	CommandBufferMgr::endCommandBuffer(cmdVertexBuffer);
 	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdVertexBuffer);
+}
+
+void VulkanRenderer::createIndexBuffer()
+{
+	CommandBufferMgr::allocCommandBuffer(&deviceObj->device, cmdPool, &cmdIndexBuffer);
+	CommandBufferMgr::beginCommandBuffer(cmdIndexBuffer);
+
+	for (VulkanDrawable* drawableObj : drawableList)
+	{
+		drawableObj->createIndexBuffer(squareIndices.data(), sizeof(squareIndices), sizeof(squareIndices[0]));
+	}
+	CommandBufferMgr::endCommandBuffer(cmdIndexBuffer);
+	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdIndexBuffer);
 }
 
 void VulkanRenderer::createShaders()
