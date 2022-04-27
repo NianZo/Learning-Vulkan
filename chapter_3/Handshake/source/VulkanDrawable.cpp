@@ -340,8 +340,83 @@ void VulkanDrawable::initScissors(VkCommandBuffer* cmd)
 	vkCmdSetScissor(*cmd, 0, NUMBER_OF_SCISSORS, &scissor);
 }
 
+void VulkanDrawable::createDescriptorLayout(bool useTexture)
+{
+	VkDescriptorSetLayoutBinding layoutBindings[2];
+	layoutBindings[0].binding = 0;
+	layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	layoutBindings[0].descriptorCount = 1;
+	layoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	layoutBindings[0].pImmutableSamplers = nullptr;
 
+	if (useTexture)
+	{
+		layoutBindings[1].binding = 1;
+		layoutBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		layoutBindings[1].descriptorCount = 1;
+		layoutBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		layoutBindings[1].pImmutableSamplers = nullptr;
+	}
 
+	VkDescriptorSetLayoutCreateInfo layoutCreateInfo;
+	layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutCreateInfo.pNext = nullptr;
+	layoutCreateInfo.flags = 0;
+	layoutCreateInfo.bindingCount = useTexture ? 2 : 1;
+	layoutCreateInfo.pBindings = layoutBindings;
+
+	VkResult result;
+	descriptorLayouts.resize(1);
+	result = vkCreateDescriptorSetLayout(deviceObj->device, &layoutCreateInfo, nullptr, descriptorLayouts.data());
+	assert(result == VK_SUCCESS);
+}
+
+void VulkanDrawable::createPipelineLayout()
+{
+	VkPipelineLayoutCreateInfo plCreateInfo;
+	plCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	plCreateInfo.pNext = nullptr;
+	plCreateInfo.flags = 0;
+	plCreateInfo.pushConstantRangeCount = 0;
+	plCreateInfo.pPushConstantRanges = nullptr;
+	plCreateInfo.setLayoutCount = (uint32_t)descriptorLayouts.size();
+	plCreateInfo.pSetLayouts = descriptorLayouts.data();
+
+	VkResult result;
+	result = vkCreatePipelineLayout(deviceObj->device, &plCreateInfo, nullptr, &pipelineLayout);
+	assert(result == VK_SUCCESS);
+}
+
+void VulkanDrawable::createDescriptorPool(bool useTexture)
+{
+	VkResult result;
+
+	VkDescriptorPoolSize descriptorTypePool[2];
+	descriptorTypePool[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	descriptorTypePool[0].descriptorCount = 1;
+
+	if (useTexture)
+	{
+		descriptorTypePool[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorTypePool[0].descriptorCount = 1;
+	}
+
+	VkDescriptorPoolCreateInfo createInfo;
+	createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	createInfo.pNext = nullptr;
+	createInfo.flags = 0;
+	createInfo.maxSets = 1;
+	createInfo.poolSizeCount = useTexture ? 2 : 1;
+	createInfo.pPoolSizes = descriptorTypePool;
+
+	result = vkCreateDescriptorPool(deviceObj->device, &createInfo, nullptr, &descriptorPool);
+	assert(result == VK_SUCCESS);
+}
+
+void VulkanDrawable::createDescriptorResources()
+{
+	createUniformBuffer();
+}
 
 
 

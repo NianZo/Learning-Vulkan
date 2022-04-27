@@ -9,10 +9,11 @@
 #define CHAPTER_3_HANDSHAKE_INCLUDE_VULKANDRAWABLE_HPP_
 
 #include "Header.hpp"
+#include "VulkanDescriptor.hpp"
 
 class VulkanRenderer;
 
-class VulkanDrawable
+class VulkanDrawable : VulkanDescriptor
 {
 public:
 	VulkanDrawable(VulkanRenderer* parent = nullptr);
@@ -32,6 +33,11 @@ public:
 
 	void setPipeline(VkPipeline* vulkanPipeline) {pipeline = vulkanPipeline;}
 	VkPipeline* getPipeline() {return pipeline;}
+
+	void createDescriptorLayout(bool useTexture) override;
+	void createPipelineLayout() override;
+	void createDescriptorPool(bool useTexture) override;
+	void createDescriptorResources() override;
 
 	// Structure storing vertex buffer metadata
 	struct {
