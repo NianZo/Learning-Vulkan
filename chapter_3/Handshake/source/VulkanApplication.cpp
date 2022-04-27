@@ -59,11 +59,17 @@ VulkanApplication::VulkanApplication()
 	instanceObj.layerExtension.getInstanceLayerProperties();
 
 	deviceObj = nullptr;
+
+	isResizing = false;
+	isPrepared = false;
+	deviceObj = nullptr;
+	rendererObj = nullptr;
 }
 
 VulkanApplication::~VulkanApplication()
 {
-
+	delete rendererObj;
+	rendererObj = nullptr;
 }
 
 VkResult VulkanApplication::createVulkanInstance(std::vector<const char*>& layers, std::vector<const char*>& extensions, const char* appName)
@@ -95,19 +101,28 @@ void VulkanApplication::initialize()
 		handShakeWithDevice(&gpuList[0], layerNames, deviceExtensionNames);
 	}
 
-	std::cout << "About to create vulkan renderer\n";
-	rendererObj = new VulkanRenderer(this, deviceObj);
-	std::cout << "Just created vulkan renderer\n";
+	if (!rendererObj)
+	{
+		std::cout << "About to create vulkan renderer\n";
+		rendererObj = new VulkanRenderer(this, deviceObj);
+		std::cout << "Just created vulkan renderer\n";
+		rendererObj->createPresentationWindow(500, 500);
+		rendererObj->getSwapChain()->initializeSwapChain();
+	}
+
 	rendererObj->initialize();
 }
 
 void VulkanApplication::prepare()
 {
+	isPrepared = false;
 	rendererObj->prepare();
+	isPrepared = true;
 }
 
 bool VulkanApplication::render()
 {
+	if (!isPrepared) return false;
 	return rendererObj->render();
 }
 
@@ -150,6 +165,32 @@ VkResult VulkanApplication::handShakeWithDevice(VkPhysicalDevice* gpu, std::vect
 	deviceObj->createDevice(layers, extensions);
 
 	return VK_SUCCESS;
+}
+
+void VulkanApplication::resize()
+{
+	if (!isPrepared)
+	{
+		std::cout << "resizing window... but application was not prepared first" << std::endl;
+		return;
+	}
+
+	isResizing = true;
+	std::cout << "Resizing window... waiting for device to go idle" << std::endl;
+	vkDeviceWaitIdle(deviceObj->device);
+	rendererObj->destroyFramebuffers();
+	rendererObj->destroyCommandPool();
+	rendererObj->destroyPipeline();
+	rendererObj->getPipelineObject()->destroyPipelineCache();
+	rendererObj->destroyRenderpass();
+	rendererObj->getSwapChain()->destroySwapChain();
+	rendererObj->destroyDrawableVertexBuffer();
+	rendererObj->destroyDepthBuffer();
+	std::cout << "Destroyed objects, re-initializing" << std::endl;
+	rendererObj->initialize();
+	prepare();
+
+	isResizing = false;
 }
 
 

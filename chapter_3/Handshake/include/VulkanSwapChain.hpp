@@ -87,6 +87,8 @@ public:
 	PFN_vkQueuePresentKHR fpQueuePresentKHR;
 	PFN_vkAcquireNextImageKHR fpAcquireNextImageKHR;
 
+	void setSwapChainExtent(uint32_t swapChainWidth, uint32_t swapChainHeight);
+
 private:
 	VkResult createSwapChainExtensions();
 	void getSupportedFormats();
@@ -96,6 +98,7 @@ private:
 	void managePresentMode();
 	void createSwapChainColorImages();
 	void createColorImageView(const VkCommandBuffer& cmd);
+
 
 	PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;
 	PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR;

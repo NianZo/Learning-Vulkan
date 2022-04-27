@@ -249,7 +249,23 @@ void VulkanDrawable::render()
 	presentInfo.pImageIndices = &currentColorImage;
 	presentInfo.pResults = nullptr;
 	result = swapChainObj->fpQueuePresentKHR(deviceObj->queue, &presentInfo);
-	assert(result == VK_SUCCESS);
+	if (result == VK_ERROR_DEVICE_LOST)
+	{
+		std::cout << "Error: lost device at present time" << std::endl;
+	} else if (result == VK_ERROR_SURFACE_LOST_KHR)
+	{
+		std::cout << "Error: lost surface at present time" << std::endl;
+	} else if (result == VK_SUBOPTIMAL_KHR)
+	{
+		std::cout << "Error: pass, but suboptimal khr" << std::endl;
+	} else if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		std::cout << "Error: out of date KHR" << std::endl;
+	} else if (result == VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT)
+	{
+		std::cout << "Error: lost full screen exclusive mode" << std::endl;
+	}
+	assert(result == VK_SUCCESS || result == VK_ERROR_OUT_OF_DATE_KHR);
 }
 
 void VulkanDrawable::recordCommandBuffer(int currentImage, VkCommandBuffer* cmdDraw)

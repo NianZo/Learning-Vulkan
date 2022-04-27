@@ -28,17 +28,21 @@ public:
 	void update(); // Update data
 	bool render(); // Render primitives
 	void deInitialize(); // Release resources
+	void resize(); // Resize the presentation surface
 
 	VulkanInstance instanceObj;
 	VulkanDevice* deviceObj;
 	VulkanRenderer* rendererObj;
 	//static std::unique_ptr<VulkanApplication> instance;
+	bool isPrepared;
+	bool isResizing;
 
 private:
 	VulkanApplication(); // Private to enforce Singleton pattern
 
 
 	static std::once_flag onlyOnce;
+
 
 	VkResult createVulkanInstance(std::vector<const char*>& layers, std::vector<const char*>& extensions, const char* applicationName);
 	VkResult enumeratePhysicalDevices(std::vector<VkPhysicalDevice>& gpuList);

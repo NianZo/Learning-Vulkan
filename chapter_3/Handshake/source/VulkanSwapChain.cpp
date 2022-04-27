@@ -52,6 +52,7 @@ void VulkanSwapChain::createSwapChain(const VkCommandBuffer& cmd)
 {
 	std::cout << "starting creatingSwapChain" << std::endl;
 	getSurfaceCapabilitiesAndPresentMode();
+	std::cout << "finished getSurfaceCapabilitiesAndPresentMode" << std::endl;
 	managePresentMode();
 	std::cout << "finished managePresentMode" << std::endl;
 	createSwapChainColorImages();
@@ -177,15 +178,19 @@ void VulkanSwapChain::getSurfaceCapabilitiesAndPresentMode()
 {
 	VkResult result;
 	VkPhysicalDevice gpu = *appObj->deviceObj->gpu;
-
+	std::cout << "getSurfaceCapabilitiesAndPresentMode 1" << std::endl;
 	result = fpGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, scPublicVars.surface, &scPrivateVars.surfCapabilities);
 	assert(result == VK_SUCCESS);
+	std::cout << "getSurfaceCapabilitiesAndPresentMode 2" << std::endl;
 	result = fpGetPhysicalDeviceSurfacePresentModesKHR(gpu, scPublicVars.surface, &scPrivateVars.presentModeCount, nullptr);
 	assert(result == VK_SUCCESS);
+	std::cout << "getSurfaceCapabilitiesAndPresentMode 3" << std::endl;
 	scPrivateVars.presentModes.clear();
 	scPrivateVars.presentModes.resize(scPrivateVars.presentModeCount);
+	std::cout << "getSurfaceCapabilitiesAndPresentMode 4" << std::endl;
 	result = fpGetPhysicalDeviceSurfacePresentModesKHR(gpu, scPublicVars.surface, &scPrivateVars.presentModeCount, scPrivateVars.presentModes.data());
 	assert(result == VK_SUCCESS);
+	std::cout << "getSurfaceCapabilitiesAndPresentMode 5" << std::endl;
 	if (scPrivateVars.surfCapabilities.currentExtent.width == (uint32_t)-1)
 	{
 		// If surface width and height aren't defined then set equal to image size
@@ -302,7 +307,29 @@ void VulkanSwapChain::createColorImageView(const VkCommandBuffer& cmd)
 	scPublicVars.currentColorBuffer = 0;
 }
 
+void VulkanSwapChain::setSwapChainExtent(uint32_t swapChainWidth, uint32_t swapChainHeight)
+{
+	scPrivateVars.swapChainExtent.width = swapChainWidth;
+	scPrivateVars.swapChainExtent.height = swapChainHeight;
+}
 
+void VulkanSwapChain::destroySwapChain()
+{
+	VulkanDevice* deviceObj = appObj->deviceObj;
+
+	for (uint32_t i = 0; i < scPublicVars.swapchainImageCount; i++)
+	{
+		vkDestroyImageView(deviceObj->device, scPublicVars.colorBuffer[i].view, nullptr);
+	}
+
+	if (!appObj->isResizing)
+	{
+		// Only executes at application shutdown
+		std::cout << "Destroying swapchain and surface" << std::endl;
+		fpDestroySwapchainKHR(deviceObj->device, scPublicVars.swapChain, nullptr);
+		vkDestroySurfaceKHR(appObj->instanceObj.instance, scPublicVars.surface, nullptr);
+	}
+}
 
 
 

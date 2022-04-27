@@ -29,6 +29,7 @@ public:
 	bool render();
 
 	void createPresentationWindow(int width, int height);
+	//void onWindowResized(GLFWwindow* window, int width, int height);
 	// method for handling window events
 	void setImageLayout(VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkAccessFlagBits srcAccessMask, const VkCommandBuffer& cmd);
 
@@ -46,6 +47,8 @@ public:
 	void destroyCommandBuffer();
 	void destroyCommandPool();
 	void destroyDepthBuffer();
+	void destroyRenderpass();
+	void destroyDrawableVertexBuffer();
 
 	void buildSwapChainAndDepthImage();
 

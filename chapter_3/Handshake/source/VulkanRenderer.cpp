@@ -10,6 +10,8 @@
 #include "MeshData.hpp"
 #include <iostream>
 
+void onWindowResized(GLFWwindow* window, int newWidth, int newHeight);
+
 VulkanRenderer::VulkanRenderer(VulkanApplication* app, VulkanDevice* deviceObject)
 {
 	assert(app != nullptr);
@@ -35,26 +37,39 @@ VulkanRenderer::~VulkanRenderer()
 
 void VulkanRenderer::createPresentationWindow(const int windowWidth, const int windowHeight)
 {
+	width = windowWidth;
+	height = windowHeight;
 	// Do a linux thing here :)
 	//glfwInit(); // TODO, this instance needs to query glfw for extensions, so it calls this first
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	//glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	window = glfwCreateWindow(windowWidth, windowHeight, "Learning Vulkan Window", nullptr, nullptr);
 
 	// For window resizing
-	//glfwSetWindowUserPointer(window, this);
-	//glfwSetWindowSizeCallback(window, onWindowResized);
+	glfwSetWindowUserPointer(window, this);
+	glfwSetWindowSizeCallback(window, onWindowResized);
+}
+
+void onWindowResized(GLFWwindow* window, int newWidth, int newHeight)
+{
+	std::cout << "onWindowResized starting..." << std::endl;
+	VulkanApplication* appObj = VulkanApplication::GetInstance();
+	VulkanRenderer* rendererObj = appObj->rendererObj;
+	rendererObj->width = newWidth;
+	rendererObj->height = newHeight;
+	rendererObj->getSwapChain()->setSwapChainExtent(newWidth, newHeight);
+	appObj->resize();
 }
 
 void VulkanRenderer::initialize()
 {
 	// Create an empty window with dimension 500x500
-	createPresentationWindow(500, 500);
-	width = 500;
-	height = 500;
-	// Initialize swapchain
-	swapChainObj->initializeSwapChain();
+//	createPresentationWindow(500, 500);
+//	width = 500;
+//	height = 500;
+//	// Initialize swapchain
+//	swapChainObj->initializeSwapChain();
 
 	// Need command buffers, so create a command buffer pool
 	createCommandPool();
@@ -75,6 +90,7 @@ void VulkanRenderer::createCommandPool()
 	VulkanDevice* deviceObj = application->deviceObj;
 	VkCommandPoolCreateInfo cmdPoolInfo;
 	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	cmdPoolInfo.pNext = nullptr;
 	cmdPoolInfo.flags = 0;
 	cmdPoolInfo.queueFamilyIndex = deviceObj->graphicsQueueWithPresentIndex;
 
@@ -107,7 +123,11 @@ bool VulkanRenderer::render()
 	std::cout << "VulkanRenderer::render()\n";
 	for (VulkanDrawable* drawableObj : drawableList)
 	{
-		drawableObj->render();
+		if (!application->isResizing)
+		{
+			drawableObj->render();
+		}
+
 	}
 	glfwPollEvents();
 	return glfwWindowShouldClose(window);
@@ -443,6 +463,8 @@ void VulkanRenderer::createIndexBuffer()
 
 void VulkanRenderer::createShaders()
 {
+	if (application->isResizing)
+		return;
 	void* vertShaderCode;
 	void* fragShaderCode;
 	size_t sizeVert, sizeFrag;
@@ -453,8 +475,32 @@ void VulkanRenderer::createShaders()
 	shaderObj.buildShaderModuleWithSPV((uint32_t*)vertShaderCode, sizeVert, (uint32_t*)fragShaderCode, sizeFrag);
 }
 
+void VulkanRenderer::destroyDepthBuffer()
+{
+	vkDestroyImageView(deviceObj->device, Depth.view, nullptr);
+	vkDestroyImage(deviceObj->device, Depth.image, nullptr);
+	vkFreeMemory(deviceObj->device, Depth.mem, nullptr);
+}
 
+void VulkanRenderer::destroyDrawableVertexBuffer()
+{
+	for (VulkanDrawable* drawableObj : drawableList)
+	{
+		drawableObj->destroyVertexBuffer();
+	}
+}
 
+void VulkanRenderer::destroyRenderpass()
+{
+	vkDestroyRenderPass(deviceObj->device, renderPass, nullptr);
+}
+
+void VulkanRenderer::destroyCommandPool()
+{
+	VulkanDevice* deviceObj = application->deviceObj;
+
+	vkDestroyCommandPool(deviceObj->device, cmdPool, nullptr);
+}
 
 
 

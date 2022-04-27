@@ -181,7 +181,11 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	return (vkCreateGraphicsPipelines(deviceObj->device, pipelineCache, 1, &pipelineInfo, nullptr, pipeline) == VK_SUCCESS);
 }
 
-
+void VulkanPipeline::destroyPipelineCache()
+{
+	vkDestroyPipelineCache(deviceObj->device, pipelineCache, nullptr);
+	vkDestroyPipelineLayout(deviceObj->device, pipelineLayout, nullptr);
+}
 
 
 
