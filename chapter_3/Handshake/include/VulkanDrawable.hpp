@@ -21,6 +21,7 @@ public:
 
 	void createVertexBuffer(const void* vertexData, uint32_t dataSize, uint32_t dataStride, bool useTexture);
 	void createIndexBuffer(const void* vertexData, uint32_t dataSize, uint32_t dataStride);
+	void createUniformBuffer();
 	void destroyVertexBuffer();
 	void destroyIndexBuffer();
 
@@ -52,6 +53,15 @@ public:
 		VkDescriptorBufferInfo bufferInfo;
 	} IndexBuffer;
 
+	struct {
+		VkBuffer buffer;
+		VkDeviceMemory memory;
+		VkDescriptorBufferInfo bufferInfo;
+		VkMemoryRequirements memRequirement;
+		std::vector<VkMappedMemoryRange> mappedRange;
+		uint8_t* pData;
+	} UniformBuffer;
+
 	// Stores the vertex input rate
 	VkVertexInputBindingDescription viIpBind;
 	// Store metadata helpful in data interpretation
@@ -66,6 +76,11 @@ private:
 	VkRect2D scissor;
 	VkSemaphore presentCompleteSemaphore;
 	VkSemaphore drawingCompleteSemaphore;
+
+	glm::mat4 Projection;
+	glm::mat4 View;
+	glm::mat4 Model;
+	glm::mat4 MVP;
 
 	// Prepares render pass instance
 	void recordCommandBuffer(int currentImage, VkCommandBuffer* cmdDraw);

@@ -16,3 +16,8 @@ void VulkanDescriptor::destroyDescriptorPool()
 {
 	vkDestroyDescriptorPool(deviceObj->device, descriptorPool, nullptr);
 }
+
+void VulkanDescriptor::destroyDescriptorSet()
+{
+	vkFreeDescriptorSets(deviceObj->device, descriptorPool, (uint32_t)descriptorSets.size(), &descriptorSets[0]);
+}

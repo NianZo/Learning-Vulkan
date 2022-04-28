@@ -418,7 +418,65 @@ void VulkanDrawable::createDescriptorResources()
 	createUniformBuffer();
 }
 
+void VulkanDrawable::createUniformBuffer()
+{
+	VkResult result;
+	bool pass;
+	Projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
+	View = glm::lookAt(glm::vec3(10, 3, 10), glm::vec3(0, 0, 0), glm::vec3(0, -1, 0));
+	Model = glm::mat4(1.0f);
+	MVP = Projection * View * Model;
 
+	VkBufferCreateInfo buffInfo;
+	buffInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	buffInfo.pNext = nullptr;
+	buffInfo.flags = 0;
+	buffInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	buffInfo.size = sizeof(MVP);
+	buffInfo.queueFamilyIndexCount = 0;
+	buffInfo.pQueueFamilyIndices = nullptr;
+	buffInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	result = vkCreateBuffer(deviceObj->device, &buffInfo, nullptr, &UniformBuffer.buffer);
+	assert(VK_SUCCESS == result);
+
+	VkMemoryRequirements memRequirement;
+	vkGetBufferMemoryRequirements(deviceObj->device, UniformBuffer.buffer, &memRequirement);
+
+	VkMemoryAllocateInfo memAllocInfo;
+	memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	memAllocInfo.pNext = nullptr;
+	memAllocInfo.allocationSize = memRequirement.size;
+	memAllocInfo.memoryTypeIndex = 0;
+	pass = deviceObj->memoryTypeFromProperties(memRequirement.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &memAllocInfo.memoryTypeIndex);
+	assert(pass);
+
+	result = vkAllocateMemory(deviceObj->device, &memAllocInfo, nullptr, &UniformBuffer.memory);
+	assert(VK_SUCCESS == result);
+
+	result = vkMapMemory(deviceObj->device, UniformBuffer.memory, 0, memRequirement.size, 0, (void**)&UniformBuffer.pData);
+	assert(VK_SUCCESS == result);
+
+	memcpy(UniformBuffer.pData, &MVP, sizeof(MVP));
+
+	UniformBuffer.mappedRange.resize(1);
+	UniformBuffer.mappedRange[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+	UniformBuffer.mappedRange[0].pNext = nullptr;
+	UniformBuffer.mappedRange[0].memory = UniformBuffer.memory;
+	UniformBuffer.mappedRange[0].offset = 0;
+	UniformBuffer.mappedRange[0].size = sizeof(MVP);
+
+	// Invalidate the range of mapped buffer in order to make it visible to the host
+	vkInvalidateMappedMemoryRanges(deviceObj->device, 1, &UniformBuffer.mappedRange[0]);
+
+	result = vkBindBufferMemory(deviceObj->device, UniformBuffer.buffer, UniformBuffer.memory, 0);
+	assert(VK_SUCCESS == result);
+
+	// Update local data structure for housekeeping
+	UniformBuffer.bufferInfo.buffer = UniformBuffer.buffer;
+	UniformBuffer.bufferInfo.offset = 0;
+	UniformBuffer.bufferInfo.range = sizeof(MVP);
+	UniformBuffer.memRequirement = memRequirement;
+}
 
 
 

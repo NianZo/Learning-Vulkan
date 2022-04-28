@@ -27,7 +27,7 @@ public:
 	void destroyDescriptorPool();
 
 	virtual void createDescriptorSet(bool useTexture) = 0;
-	void destroyDescriptorPool();
+	void destroyDescriptorSet();
 
 	virtual void createPipelineLayout() = 0;
 	void destroyPipelineLayout();
