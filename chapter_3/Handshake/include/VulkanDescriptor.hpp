@@ -9,13 +9,17 @@
 #define CHAPTER_3_HANDSHAKE_INCLUDE_VULKANDESCRIPTOR_HPP_
 
 #include "Header.hpp"
-#include "VulkanDevice.hpp"
+//#include "VulkanDevice.hpp"
+//#include "VulkanApplication.hpp"
+
+class VulkanDevice;
+class VulkanApplication;
 
 class VulkanDescriptor
 {
 public:
 	VulkanDescriptor();
-	virtual ~VulkanDescriptor();
+	virtual ~VulkanDescriptor() {};
 
 	void createDescriptor(bool useTexture);
 	void destroyDescriptor();
@@ -31,6 +35,8 @@ public:
 
 	virtual void createPipelineLayout() = 0;
 	void destroyPipelineLayout();
+
+	virtual void createDescriptorResources() = 0;
 
 	VkPipelineLayout pipelineLayout;
 	std::vector<VkDescriptorSetLayout> descriptorLayouts;

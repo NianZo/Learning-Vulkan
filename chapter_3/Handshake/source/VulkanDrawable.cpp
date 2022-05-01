@@ -217,7 +217,7 @@ void VulkanDrawable::render()
 	//VkSemaphore presentCompleteSemaphore;
 
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	// Get index of next available swapchain image
 	VkResult result = swapChainObj->fpAcquireNextImageKHR(deviceObj->device, swapChain, UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &currentColorImage);
@@ -305,6 +305,8 @@ void VulkanDrawable::recordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 	vkCmdBeginRenderPass(*cmdDraw, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
 
 	vkCmdBindPipeline(*cmdDraw, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
+
+	vkCmdBindDescriptorSets(*cmdDraw, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
 
 	const VkDeviceSize offsets[1] = { 0 };
 	vkCmdBindVertexBuffers(*cmdDraw, 0, 1, &VertexBuffer.buffer, offsets);
@@ -478,12 +480,80 @@ void VulkanDrawable::createUniformBuffer()
 	UniformBuffer.memRequirement = memRequirement;
 }
 
+void VulkanDrawable::createDescriptorSet(bool useTexture)
+{
+	VulkanPipeline* pipelineObj = rendererObj->getPipelineObject();
+	VkResult result;
 
+	VkDescriptorSetAllocateInfo dsAllocInfo[1];
+	dsAllocInfo[0].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	dsAllocInfo[0].pNext = nullptr;
+	dsAllocInfo[0].descriptorPool = descriptorPool;
+	dsAllocInfo[0].descriptorSetCount = 1;
+	dsAllocInfo[0].pSetLayouts = descriptorLayouts.data();
 
+	descriptorSets.resize(1);
+	result = vkAllocateDescriptorSets(deviceObj->device, dsAllocInfo, descriptorSets.data());
+	assert(result == VK_SUCCESS);
 
+	VkWriteDescriptorSet writes[2];
+	memset(&writes, 0, sizeof(writes));
 
+	writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	writes[0].pNext = nullptr;
+	writes[0].dstSet = descriptorSets[0];
+	writes[0].descriptorCount = 1;
+	writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	writes[0].pImageInfo = nullptr;
+	writes[0].pTexelBufferView = nullptr;
+	writes[0].pBufferInfo = &UniformBuffer.bufferInfo;
+	writes[0].dstArrayElement = 0;
+	writes[0].dstBinding = 0;
 
+	if (useTexture)
+	{
+		writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writes[1].pNext = nullptr;
+		writes[1].dstSet = descriptorSets[0];
+		writes[1].dstBinding = 1;
+		writes[1].descriptorCount = 1;
+		writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		writes[1].pImageInfo = nullptr;
+		writes[1].pTexelBufferView = nullptr;
+		writes[1].pBufferInfo = nullptr;
+		writes[1].dstArrayElement = 0;
+	}
 
+	vkUpdateDescriptorSets(deviceObj->device, useTexture ? 2 : 1, writes, 0, nullptr);
+}
+
+void VulkanDrawable::update()
+{
+	VulkanDevice* deviceObj = rendererObj->getDevice();
+	uint8_t* pData;
+	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
+	glm::mat4 View = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	glm::mat4 Model = glm::mat4(1.0f);
+	static float rot = 0;
+	rot += 0.003f;
+	Model = glm::rotate(Model, rot, glm::vec3(0.0, 1.0, 0.0)) * glm::rotate(Model, rot, glm::vec3(1.0, 1.0, 1.0));
+	glm::mat4 MVP = Projection * View * Model;
+
+	//VkResult result = vkMapMemory(deviceObj->device, UniformBuffer.memory, 0, UniformBuffer.memRequirement.size, 0, (void**)&pData);
+	//assert(VK_SUCCESS == result);
+	VkResult result = vkInvalidateMappedMemoryRanges(deviceObj->device, 1, &UniformBuffer.mappedRange[0]);
+	assert(VK_SUCCESS == result);
+	memcpy(pData, &MVP, sizeof(MVP));
+	result = vkFlushMappedMemoryRanges(deviceObj->device, 1, &UniformBuffer.mappedRange[0]);
+	assert(VK_SUCCESS == result);
+}
+
+void VulkanDrawable::destroyUniformBuffer()
+{
+	vkUnmapMemory(deviceObj->device, UniformBuffer.memory);
+	vkDestroyBuffer(deviceObj->device, UniformBuffer.buffer, nullptr);
+	vkFreeMemory(deviceObj->device, UniformBuffer.memory, nullptr);
+}
 
 
 

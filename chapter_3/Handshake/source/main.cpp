@@ -19,6 +19,8 @@ int main(int argc, char** argv)
 	appObj->initialize();
 	appObj->prepare();
 
-	while(!appObj->render()) {};
+	while(!appObj->render()) {
+		appObj->update();
+	};
 }
 

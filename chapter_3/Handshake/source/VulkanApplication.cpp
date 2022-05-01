@@ -193,6 +193,11 @@ void VulkanApplication::resize()
 	isResizing = false;
 }
 
+void VulkanApplication::update()
+{
+	rendererObj->update();
+}
+
 
 
 

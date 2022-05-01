@@ -13,21 +13,23 @@
 
 class VulkanRenderer;
 
-class VulkanDrawable : VulkanDescriptor
+class VulkanDrawable : public VulkanDescriptor
 {
 public:
 	VulkanDrawable(VulkanRenderer* parent = nullptr);
-	~VulkanDrawable();
+	~VulkanDrawable() override {};
 
 	void createVertexBuffer(const void* vertexData, uint32_t dataSize, uint32_t dataStride, bool useTexture);
 	void createIndexBuffer(const void* vertexData, uint32_t dataSize, uint32_t dataStride);
 	void createUniformBuffer();
 	void destroyVertexBuffer();
 	void destroyIndexBuffer();
+	void destroyUniformBuffer();
 
 	// Prepares the drawing object befoer rendering
 	// Allocate, create, record command buffer
 	void prepare();
+	void update();
 	void render();
 	void initViewports(VkCommandBuffer* cmd);
 	void initScissors(VkCommandBuffer* cmd);
@@ -39,6 +41,7 @@ public:
 	void createPipelineLayout() override;
 	void createDescriptorPool(bool useTexture) override;
 	void createDescriptorResources() override;
+	void createDescriptorSet(bool useTexture) override;
 
 	// Structure storing vertex buffer metadata
 	struct {

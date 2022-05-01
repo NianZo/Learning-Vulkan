@@ -6,6 +6,13 @@
  */
 
 #include "VulkanDescriptor.hpp"
+#include "VulkanDevice.hpp"
+#include "VulkanApplication.hpp"
+
+VulkanDescriptor::VulkanDescriptor()
+{
+	deviceObj = VulkanApplication::GetInstance()->deviceObj;
+}
 
 void VulkanDescriptor::destroyPipelineLayout()
 {
@@ -20,4 +27,11 @@ void VulkanDescriptor::destroyDescriptorPool()
 void VulkanDescriptor::destroyDescriptorSet()
 {
 	vkFreeDescriptorSets(deviceObj->device, descriptorPool, (uint32_t)descriptorSets.size(), &descriptorSets[0]);
+}
+
+void VulkanDescriptor::createDescriptor(bool useTexture)
+{
+	createDescriptorResources();
+	createDescriptorPool(useTexture);
+	createDescriptorSet(useTexture);
 }

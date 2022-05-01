@@ -26,6 +26,7 @@ public:
 
 	void initialize();
 	void prepare();
+	void update();
 	bool render();
 
 	void createPresentationWindow(int width, int height);
@@ -93,6 +94,8 @@ public:
 	void createShaders();
 	void createPipelineStateManagement();
 	void destroyPipeline();
+
+	void createDescriptors();
 private:
 	// Class managers
 	VulkanSwapChain* swapChainObj;

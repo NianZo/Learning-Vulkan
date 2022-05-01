@@ -82,6 +82,7 @@ void VulkanRenderer::initialize()
 	createFramebuffers(includeDepth);
 
 	createShaders();
+	createDescriptors();
 	createPipelineStateManagement();
 }
 
@@ -405,6 +406,11 @@ void VulkanRenderer::destroyFramebuffers()
 
 void VulkanRenderer::createPipelineStateManagement()
 {
+	for (VulkanDrawable* drawableObj : drawableList)
+	{
+		drawableObj->createPipelineLayout();
+	}
+
 	// Create the pipeline cache
 	pipelineObj.createPipelineCache();
 
@@ -502,6 +508,22 @@ void VulkanRenderer::destroyCommandPool()
 	vkDestroyCommandPool(deviceObj->device, cmdPool, nullptr);
 }
 
+void VulkanRenderer::update()
+{
+	for (VulkanDrawable* drawableObj : drawableList)
+	{
+		drawableObj->update();
+	}
+}
+
+void VulkanRenderer::createDescriptors()
+{
+	for (VulkanDrawable* drawableObj : drawableList)
+	{
+		drawableObj->createDescriptorLayout(false);
+		drawableObj->createDescriptor(false);
+	}
+}
 
 
 
