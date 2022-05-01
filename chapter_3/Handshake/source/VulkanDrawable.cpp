@@ -530,7 +530,7 @@ void VulkanDrawable::createDescriptorSet(bool useTexture)
 void VulkanDrawable::update()
 {
 	VulkanDevice* deviceObj = rendererObj->getDevice();
-	uint8_t* pData;
+	//uint8_t* pData;
 	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
 	glm::mat4 View = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	glm::mat4 Model = glm::mat4(1.0f);
@@ -541,9 +541,10 @@ void VulkanDrawable::update()
 
 	//VkResult result = vkMapMemory(deviceObj->device, UniformBuffer.memory, 0, UniformBuffer.memRequirement.size, 0, (void**)&pData);
 	//assert(VK_SUCCESS == result);
+	// TODO I am at least making it here before crashing
 	VkResult result = vkInvalidateMappedMemoryRanges(deviceObj->device, 1, &UniformBuffer.mappedRange[0]);
 	assert(VK_SUCCESS == result);
-	memcpy(pData, &MVP, sizeof(MVP));
+	memcpy(UniformBuffer.pData, &MVP, sizeof(MVP));
 	result = vkFlushMappedMemoryRanges(deviceObj->device, 1, &UniformBuffer.mappedRange[0]);
 	assert(VK_SUCCESS == result);
 }
