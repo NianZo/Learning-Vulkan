@@ -73,6 +73,7 @@ public:
 	VkCommandPool cmdPool;
 	VkCommandBuffer cmdVertexBuffer;
 	VkCommandBuffer cmdIndexBuffer;
+	VkCommandBuffer cmdPushConstants;
 
 	int width;
 	int height;
@@ -96,6 +97,7 @@ public:
 	void destroyPipeline();
 
 	void createDescriptors();
+	void createPushConstants();
 private:
 	// Class managers
 	VulkanSwapChain* swapChainObj;

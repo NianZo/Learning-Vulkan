@@ -10,6 +10,7 @@
 #include "VulkanShader.hpp"
 #include "VulkanRenderer.hpp"
 #include "VulkanDevice.hpp"
+#include <iostream>
 
 VulkanPipeline::VulkanPipeline()
 {
@@ -146,15 +147,15 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	multisampleStateInfo.alphaToCoverageEnable = VK_FALSE;
 	multisampleStateInfo.alphaToOneEnable = VK_FALSE;
 
-	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo;
-	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutCreateInfo.pNext = nullptr;
-	pipelineLayoutCreateInfo.flags = 0;
-	pipelineLayoutCreateInfo.setLayoutCount = 0;
-	pipelineLayoutCreateInfo.pSetLayouts = nullptr;
-	pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-	pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
-	vkCreatePipelineLayout(deviceObj->device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
+//	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo;
+//	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+//	pipelineLayoutCreateInfo.pNext = nullptr;
+//	pipelineLayoutCreateInfo.flags = 0;
+//	pipelineLayoutCreateInfo.setLayoutCount = 0;
+//	pipelineLayoutCreateInfo.pSetLayouts = nullptr;
+//	pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+//	pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+//	vkCreatePipelineLayout(deviceObj->device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
 
 	// Actual pipeline creation
 	VkGraphicsPipelineCreateInfo pipelineInfo;
@@ -174,9 +175,10 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	pipelineInfo.pDynamicState = &dynamicState;
 	pipelineInfo.renderPass = appObj->rendererObj->renderPass;
 	pipelineInfo.subpass = 0;
-	pipelineInfo.layout = pipelineLayout;
+	pipelineInfo.layout = drawableObj->pipelineLayout;
 	pipelineInfo.basePipelineHandle = 0;
 	pipelineInfo.basePipelineIndex = 0;
+	std::cout << "Creating pipeline with this pipelineLayout: " << &drawableObj->pipelineLayout << std::endl;
 
 	return (vkCreateGraphicsPipelines(deviceObj->device, pipelineCache, 1, &pipelineInfo, nullptr, pipeline) == VK_SUCCESS);
 }

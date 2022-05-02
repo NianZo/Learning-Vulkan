@@ -235,7 +235,7 @@ void VulkanDrawable::render()
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &drawingCompleteSemaphore;
 
-	std::cout << "currentColorImage index: " << currentColorImage << std::endl;
+	//std::cout << "currentColorImage index: " << currentColorImage << std::endl;
 	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &vecCmdDraw[currentColorImage], &submitInfo);
 
 	// Present the image in the window
@@ -272,21 +272,22 @@ void VulkanDrawable::recordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 {
 	// Specify clear color value
 	VkClearValue clearValues[2];
-	switch (currentImage)
-	{
-	case 0:
-		clearValues[0].color = {1.0f, 0.0f, 0.0f, 1.0f};
-		break;
-	case 1:
-		clearValues[0].color = {0.0f, 1.0f, 0.0f, 1.0f};
-		break;
-	case 2:
-		clearValues[0].color = {0.0f, 0.0f, 1.0f, 1.0f};
-		break;
-	default:
-		clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
-		break;
-	}
+//	switch (currentImage)
+//	{
+//	case 0:
+//		clearValues[0].color = {1.0f, 0.0f, 0.0f, 1.0f};
+//		break;
+//	case 1:
+//		clearValues[0].color = {0.0f, 1.0f, 0.0f, 1.0f};
+//		break;
+//	case 2:
+//		clearValues[0].color = {0.0f, 0.0f, 1.0f, 1.0f};
+//		break;
+//	default:
+//		clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
+//		break;
+//	}
+	clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
 	clearValues[1].depthStencil.depth = 1.0f;
 	clearValues[1].depthStencil.stencil = 0;
 
@@ -315,6 +316,39 @@ void VulkanDrawable::recordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 
 	initViewports(cmdDraw);
 	initScissors(cmdDraw);
+
+	// TODO test for push constants here
+	enum ColorFlag
+	{
+		RED = 1,
+		GREEN = 2,
+		BLUE = 3,
+		MIXED_COLOR = 4
+	};
+
+	float mixerValue = 0.3f;
+	unsigned constColorRGBFlag = BLUE;
+
+	struct
+	{
+		int flag;
+		float mixer;
+	} pushConstantLayout;
+	pushConstantLayout.flag = MIXED_COLOR;
+	pushConstantLayout.mixer = mixerValue;
+	//unsigned pushConstants[2];
+	//pushConstants[0] = constColorRGBFlag;
+	//memcpy(&pushConstants[1], &mixerValue, sizeof(float));
+
+//	int maxPushConstantSize = getDevice()->gpuProps.limits.maxPushConstantsSize;
+//	if (sizeof(pushConstantLayout) > maxPushConstantSize)
+//	{
+//		std::cout << "Push constant size is greater than expected, max allow size is " << maxPushConstantSize << std::endl;
+//		assert(0);
+//	}
+
+	//std::cout << "Updating push constants: " << &pipelineLayout << std::endl;
+	vkCmdPushConstants(*cmdDraw, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 8, &pushConstantLayout);
 
 	//vkCmdDraw(*cmdDraw, 3, 1, 0, 0);
 	vkCmdDrawIndexed(*cmdDraw, 6, 1, 0, 0, 0);
@@ -375,12 +409,18 @@ void VulkanDrawable::createDescriptorLayout(bool useTexture)
 
 void VulkanDrawable::createPipelineLayout()
 {
+	const unsigned pushConstantRangeCount = 1;
+	VkPushConstantRange pushConstantRanges[pushConstantRangeCount];
+	pushConstantRanges[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	pushConstantRanges[0].offset = 0;
+	pushConstantRanges[0].size = 8;
+
 	VkPipelineLayoutCreateInfo plCreateInfo;
 	plCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	plCreateInfo.pNext = nullptr;
 	plCreateInfo.flags = 0;
-	plCreateInfo.pushConstantRangeCount = 0;
-	plCreateInfo.pPushConstantRanges = nullptr;
+	plCreateInfo.pushConstantRangeCount = 1;
+	plCreateInfo.pPushConstantRanges = pushConstantRanges;
 	plCreateInfo.setLayoutCount = (uint32_t)descriptorLayouts.size();
 	plCreateInfo.pSetLayouts = descriptorLayouts.data();
 
@@ -535,7 +575,7 @@ void VulkanDrawable::update()
 	glm::mat4 View = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	glm::mat4 Model = glm::mat4(1.0f);
 	static float rot = 0;
-	rot += 0.003f;
+	rot += 0.001f;
 	Model = glm::rotate(Model, rot, glm::vec3(0.0, 1.0, 0.0)) * glm::rotate(Model, rot, glm::vec3(1.0, 1.0, 1.0));
 	glm::mat4 MVP = Projection * View * Model;
 

@@ -84,6 +84,7 @@ void VulkanRenderer::initialize()
 	createShaders();
 	createDescriptors();
 	createPipelineStateManagement();
+	createPushConstants();
 }
 
 void VulkanRenderer::createCommandPool()
@@ -121,7 +122,7 @@ void VulkanRenderer::prepare()
 bool VulkanRenderer::render()
 {
 	// Do some more linux stuff here
-	std::cout << "VulkanRenderer::render()\n";
+	//std::cout << "VulkanRenderer::render()\n";
 	for (VulkanDrawable* drawableObj : drawableList)
 	{
 		if (!application->isResizing)
@@ -408,6 +409,7 @@ void VulkanRenderer::createPipelineStateManagement()
 {
 	for (VulkanDrawable* drawableObj : drawableList)
 	{
+		std::cout << "Creating pipeline layout: " << &drawableObj->pipelineLayout << std::endl;
 		drawableObj->createPipelineLayout();
 	}
 
@@ -523,6 +525,50 @@ void VulkanRenderer::createDescriptors()
 		drawableObj->createDescriptorLayout(false);
 		drawableObj->createDescriptor(false);
 	}
+}
+
+void VulkanRenderer::createPushConstants()
+{
+	CommandBufferMgr::allocCommandBuffer(&deviceObj->device, cmdPool, &cmdPushConstants);
+	CommandBufferMgr::beginCommandBuffer(cmdPushConstants);
+
+	enum ColorFlag
+	{
+		RED = 1,
+		GREEN = 2,
+		BLUE = 3,
+		MIXED_COLOR = 4
+	};
+
+	float mixerValue = 0.3f;
+	unsigned constColorRGBFlag = BLUE;
+
+	struct
+	{
+		int flag;
+		float mixer;
+	} pushConstantLayout;
+	pushConstantLayout.flag = BLUE;
+	pushConstantLayout.mixer = mixerValue;
+	//unsigned pushConstants[2];
+	//pushConstants[0] = constColorRGBFlag;
+	//memcpy(&pushConstants[1], &mixerValue, sizeof(float));
+
+	int maxPushConstantSize = getDevice()->gpuProps.limits.maxPushConstantsSize;
+	if (sizeof(pushConstantLayout) > maxPushConstantSize)
+	{
+		std::cout << "Push constant size is greater than expected, max allow size is " << maxPushConstantSize << std::endl;
+		assert(0);
+	}
+
+	for (VulkanDrawable* drawableObj : drawableList)
+	{
+		std::cout << "Updating push constants: " << &drawableObj->pipelineLayout << std::endl;
+		vkCmdPushConstants(cmdPushConstants, drawableObj->pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 8, &pushConstantLayout);
+	}
+
+	CommandBufferMgr::endCommandBuffer(cmdPushConstants);
+	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdPushConstants);
 }
 
 
