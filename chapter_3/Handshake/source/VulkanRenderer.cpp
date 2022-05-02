@@ -450,7 +450,7 @@ void VulkanRenderer::createVertexBuffer()
 
 	for (VulkanDrawable* drawableObj : drawableList)
 	{
-		drawableObj->createVertexBuffer(squareData.data(), sizeof(squareData), sizeof(squareData[0]), false);
+		drawableObj->createVertexBuffer(cubeData.data(), sizeof(cubeData), sizeof(cubeData[0]), false);
 	}
 	CommandBufferMgr::endCommandBuffer(cmdVertexBuffer);
 	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdVertexBuffer);

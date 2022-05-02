@@ -312,7 +312,7 @@ void VulkanDrawable::recordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 	const VkDeviceSize offsets[1] = { 0 };
 	vkCmdBindVertexBuffers(*cmdDraw, 0, 1, &VertexBuffer.buffer, offsets);
 
-	vkCmdBindIndexBuffer(*cmdDraw, IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+	//vkCmdBindIndexBuffer(*cmdDraw, IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 
 	initViewports(cmdDraw);
 	initScissors(cmdDraw);
@@ -326,7 +326,7 @@ void VulkanDrawable::recordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 		MIXED_COLOR = 4
 	};
 
-	float mixerValue = 0.3f;
+	float mixerValue = 0.8f;
 	unsigned constColorRGBFlag = BLUE;
 
 	struct
@@ -348,10 +348,10 @@ void VulkanDrawable::recordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 //	}
 
 	//std::cout << "Updating push constants: " << &pipelineLayout << std::endl;
-	vkCmdPushConstants(*cmdDraw, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 8, &pushConstantLayout);
+	vkCmdPushConstants(*cmdDraw, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 8, &pushConstantLayout); // This seems to need to be here instead of separate. same command list? same time as draw?
 
-	//vkCmdDraw(*cmdDraw, 3, 1, 0, 0);
-	vkCmdDrawIndexed(*cmdDraw, 6, 1, 0, 0, 0);
+	vkCmdDraw(*cmdDraw, 36, 1, 0, 0);
+	//vkCmdDrawIndexed(*cmdDraw, 6, 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(*cmdDraw);
 }
