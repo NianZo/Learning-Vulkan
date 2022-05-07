@@ -571,6 +571,82 @@ void VulkanRenderer::createPushConstants()
 	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdPushConstants);
 }
 
+void VulkanRenderer::createTextureLinear(const char* filename, TextureData* texture, VkImageUsageFlags imageUsageFlags, VkFormat format)
+{
+	// Load image
+	int width, height, channels;
+	stbi_uc* pixels = stbi_load(filename, &width, &height,&channels, STBI_rgb_alpha);
+	texture->width = static_cast<uint32_t>(width);
+	texture->height = static_cast<uint32_t>(height);
+	texture->mipMapLevels = 1;
+
+	VkImageCreateInfo imageCreateInfo;
+	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageCreateInfo.pNext = nullptr;
+	imageCreateInfo.flags = 0;
+	imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageCreateInfo.format = format;
+	imageCreateInfo.extent.width = texture->width;
+	imageCreateInfo.extent.height = texture->height;
+	imageCreateInfo.extent.depth = 1;
+	imageCreateInfo.mipLevels = texture->mipMapLevels;
+	imageCreateInfo.arrayLayers = 1;
+	imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageCreateInfo.queueFamilyIndexCount = 0;
+	imageCreateInfo.pQueueFamilyIndices = nullptr;
+	imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageCreateInfo.usage = imageUsageFlags;
+	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+	imageCreateInfo.tiling = VK_IMAGE_TILING_LINEAR;
+
+	VkResult result;
+	result = vkCreateImage(deviceObj->device, &imageCreateInfo, nullptr, &texture->image);
+	assert(result == VK_SUCCESS);
+
+	VkMemoryRequirements memoryRequirements;
+	vkGetImageMemoryRequirements(deviceObj->device, texture->image, &memoryRequirements);
+
+	VkMemoryAllocateInfo& memAlloc = texture->allocInfo;
+	memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	memAlloc.pNext = nullptr;
+	memAlloc.allocationSize = memoryRequirements.size;
+	memAlloc.memoryTypeIndex = 0;
+	bool pass = deviceObj->memoryTypeFromProperties(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &texture->allocInfo.memoryTypeIndex);
+	assert(pass);
+
+	result = vkAllocateMemory(deviceObj->device, &texture->allocInfo, nullptr, &texture->memory);
+	assert(result == VK_SUCCESS);
+
+	result = vkBindImageMemory(deviceObj->device, texture->image, texture->memory, 0);
+	assert(result == VK_SUCCESS);
+
+	VkImageSubresource subresource;
+	subresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	subresource.mipLevel = 0;
+	subresource.arrayLayer = 0;
+
+	VkSubresourceLayout layout;
+	uint8_t* data;
+
+	vkGetImageSubresourceLayout(deviceObj->device, texture->image, &subresource, &layout);
+
+	result = vkMapMemory(deviceObj->device, texture->memory, 0, texture->allocInfo.allocationSize, 0, (void**)&data);
+	assert(result == VK_SUCCESS);
+
+	// Load texture data into mapped buffer
+	uint8_t* tempData = (uint8_t*)pixels;
+	for (int y = 0; y < texture->height; y++)
+	{
+		size_t imageByteWidth = texture->width * 4;
+		memcpy(data, tempData, imageByteWidth);
+		tempData += imageByteWidth;
+
+		data += layout.rowPitch;
+	}
+
+	vkUnmapMemory(deviceObj->device, texture->memory);
+}
+
 
 
 

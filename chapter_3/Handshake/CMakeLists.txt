@@ -56,6 +56,16 @@ endif()
 # Specify project name
 project(${Recipe_Name})
 
+# GLI SETUP
+set (EXTDIR "${CMAKE_SOURCE_DIR}/../../external/gli")
+set (GLIINCLUDES "${EXTDIR}")
+get_filename_component(GLIINC_PREFIX "${GLIINCLUDES}" ABSOLUTE)
+if(NOT EXISTS ${GLIINC_PREFIX})
+	message(FATAL_ERROR "Necessary gli headers do not exist: " ${GLIINC_PREFIX})
+endif()
+include_directories(${GLIINC_PREFIX})
+include_directories("${CMAKE_SOURCE_DIR}/../../external/stb")
+
 # Add preprocessor definitions here
 #add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
 find_package(glfw3 REQUIRED)

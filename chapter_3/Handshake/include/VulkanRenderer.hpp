@@ -98,6 +98,8 @@ public:
 
 	void createDescriptors();
 	void createPushConstants();
+
+	void createTextureLinear(const char* filename, TextureData* texture, VkImageUsageFlags imageUsageFlags, VkFormat format);
 private:
 	// Class managers
 	VulkanSwapChain* swapChainObj;
