@@ -401,6 +401,7 @@ void VulkanDrawable::createDescriptorLayout(bool useTexture)
 	layoutCreateInfo.bindingCount = useTexture ? 2 : 1;
 	layoutCreateInfo.pBindings = layoutBindings;
 
+	std::cout << "layoutCreateInfo.bindingCout: " << layoutCreateInfo.bindingCount << std::endl;
 	VkResult result;
 	descriptorLayouts.resize(1);
 	result = vkCreateDescriptorSetLayout(deviceObj->device, &layoutCreateInfo, nullptr, descriptorLayouts.data());
@@ -439,14 +440,14 @@ void VulkanDrawable::createDescriptorPool(bool useTexture)
 
 	if (useTexture)
 	{
-		descriptorTypePool[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorTypePool[0].descriptorCount = 1;
+		descriptorTypePool[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorTypePool[1].descriptorCount = 1;
 	}
 
 	VkDescriptorPoolCreateInfo createInfo;
 	createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	createInfo.pNext = nullptr;
-	createInfo.flags = 0;
+	createInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 	createInfo.maxSets = 1;
 	createInfo.poolSizeCount = useTexture ? 2 : 1;
 	createInfo.pPoolSizes = descriptorTypePool;
@@ -537,7 +538,7 @@ void VulkanDrawable::createDescriptorSet(bool useTexture)
 	assert(result == VK_SUCCESS);
 
 	VkWriteDescriptorSet writes[2];
-	memset(&writes, 0, sizeof(writes));
+	//memset(&writes, 0, sizeof(writes));
 
 	writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	writes[0].pNext = nullptr;
@@ -558,13 +559,14 @@ void VulkanDrawable::createDescriptorSet(bool useTexture)
 		writes[1].dstBinding = 1;
 		writes[1].descriptorCount = 1;
 		writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		writes[1].pImageInfo = nullptr;
+		writes[1].pImageInfo = &textures->descriptorImageInfo;
 		writes[1].pTexelBufferView = nullptr;
 		writes[1].pBufferInfo = nullptr;
 		writes[1].dstArrayElement = 0;
 	}
-
+	std::cout << "about to update descriptor sets" << std::endl;
 	vkUpdateDescriptorSets(deviceObj->device, useTexture ? 2 : 1, writes, 0, nullptr);
+	std::cout << "just called vkUpdateDescriptorSets" << std::endl;
 }
 
 void VulkanDrawable::update()
@@ -596,6 +598,10 @@ void VulkanDrawable::destroyUniformBuffer()
 	vkFreeMemory(deviceObj->device, UniformBuffer.memory, nullptr);
 }
 
+void VulkanDrawable::setTextures(TextureData* tex)
+{
+	textures = tex;
+}
 
 
 

@@ -20,6 +20,7 @@ public:
 	VkDevice device;
 	VkPhysicalDevice* gpu;
 	VkPhysicalDeviceProperties gpuProps;
+	VkPhysicalDeviceFeatures deviceFeatures;
 	VkPhysicalDeviceMemoryProperties memoryProperties;
 
 	VkQueue queue;

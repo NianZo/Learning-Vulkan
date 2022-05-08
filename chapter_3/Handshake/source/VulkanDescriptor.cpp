@@ -8,6 +8,7 @@
 #include "VulkanDescriptor.hpp"
 #include "VulkanDevice.hpp"
 #include "VulkanApplication.hpp"
+#include <iostream>
 
 VulkanDescriptor::VulkanDescriptor()
 {
@@ -32,6 +33,9 @@ void VulkanDescriptor::destroyDescriptorSet()
 void VulkanDescriptor::createDescriptor(bool useTexture)
 {
 	createDescriptorResources();
+	std::cout << "created descriptor resources" << std::endl;
 	createDescriptorPool(useTexture);
+	std::cout << "created descriptor pool" << std::endl;
 	createDescriptorSet(useTexture);
+	std::cout << "created descriptor set" << std::endl;
 }

@@ -32,7 +32,7 @@ public:
 	void createPresentationWindow(int width, int height);
 	//void onWindowResized(GLFWwindow* window, int width, int height);
 	// method for handling window events
-	void setImageLayout(VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkAccessFlagBits srcAccessMask, const VkCommandBuffer& cmd);
+	void setImageLayout(VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, const VkImageSubresourceRange& subresourceRange, const VkCommandBuffer& cmd);
 
 	VulkanApplication* getApplication() {return application;}
 	VulkanDevice* getDevice() {return deviceObj;}
@@ -74,9 +74,11 @@ public:
 	VkCommandBuffer cmdVertexBuffer;
 	VkCommandBuffer cmdIndexBuffer;
 	VkCommandBuffer cmdPushConstants;
+	VkCommandBuffer cmdTexture;
 
 	int width;
 	int height;
+	TextureData texture;
 
 	// Render pass stuff
 	void createRenderPassCB(bool includeDepth);
@@ -99,7 +101,8 @@ public:
 	void createDescriptors();
 	void createPushConstants();
 
-	void createTextureLinear(const char* filename, TextureData* texture, VkImageUsageFlags imageUsageFlags, VkFormat format);
+	void createTextureLinear(const char* filename, TextureData* texture, VkImageUsageFlags imageUsageFlags, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM);
+	void createTextureOptimal(const char* filename, TextureData* texture, VkImageUsageFlags imageUsageFlags, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM);
 private:
 	// Class managers
 	VulkanSwapChain* swapChainObj;

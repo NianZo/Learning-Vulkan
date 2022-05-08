@@ -10,6 +10,7 @@
 
 #include "Header.hpp"
 #include "VulkanDescriptor.hpp"
+#include "Wrapper.hpp"
 
 class VulkanRenderer;
 
@@ -42,6 +43,8 @@ public:
 	void createDescriptorPool(bool useTexture) override;
 	void createDescriptorResources() override;
 	void createDescriptorSet(bool useTexture) override;
+
+	void setTextures(TextureData* tex);
 
 	// Structure storing vertex buffer metadata
 	struct {
@@ -79,6 +82,8 @@ private:
 	VkRect2D scissor;
 	VkSemaphore presentCompleteSemaphore;
 	VkSemaphore drawingCompleteSemaphore;
+
+	TextureData* textures;
 
 	glm::mat4 Projection;
 	glm::mat4 View;
