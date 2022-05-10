@@ -108,7 +108,7 @@ void VulkanRenderer::createCommandPool()
 	VkCommandPoolCreateInfo cmdPoolInfo;
 	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	cmdPoolInfo.pNext = nullptr;
-	cmdPoolInfo.flags = 0;
+	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	cmdPoolInfo.queueFamilyIndex = deviceObj->graphicsQueueWithPresentIndex;
 
 	vkCreateCommandPool(deviceObj->device, &cmdPoolInfo, nullptr, &cmdPool);
@@ -268,10 +268,11 @@ void VulkanRenderer::setImageLayout(VkImage image, VkImageAspectFlags aspectMask
 	imgMemoryBarrier.oldLayout = oldImageLayout;
 	imgMemoryBarrier.newLayout = newImageLayout;
 	imgMemoryBarrier.image = image;
-	imgMemoryBarrier.subresourceRange.aspectMask = aspectMask;
-	imgMemoryBarrier.subresourceRange.baseMipLevel = 0;
-	imgMemoryBarrier.subresourceRange.levelCount = 1;
-	imgMemoryBarrier.subresourceRange.layerCount = 1;
+	//imgMemoryBarrier.subresourceRange.aspectMask = aspectMask;
+	//imgMemoryBarrier.subresourceRange.baseMipLevel = 0;
+	//imgMemoryBarrier.subresourceRange.levelCount = 1;
+	//imgMemoryBarrier.subresourceRange.layerCount = 1;
+	imgMemoryBarrier.subresourceRange = subresourceRange;
 	imgMemoryBarrier.srcQueueFamilyIndex = deviceObj->graphicsQueueFamilyIndex;
 	imgMemoryBarrier.dstQueueFamilyIndex = deviceObj->graphicsQueueFamilyIndex;
 
@@ -280,6 +281,7 @@ void VulkanRenderer::setImageLayout(VkImage image, VkImageAspectFlags aspectMask
 		imgMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 	}
 
+	VkPipelineStageFlags srcStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	switch (oldImageLayout)
 	{
 	case VK_IMAGE_LAYOUT_UNDEFINED:
@@ -290,13 +292,14 @@ void VulkanRenderer::setImageLayout(VkImage image, VkImageAspectFlags aspectMask
 		break;
 	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 		imgMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		srcStages = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
 		imgMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 		break;
 	}
 
-	VkPipelineStageFlags srcStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+
 	VkPipelineStageFlags dstStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT; // TODO validation layers are MUCH more picky about the stage used here
 	switch (newImageLayout)
 	{
@@ -305,12 +308,14 @@ void VulkanRenderer::setImageLayout(VkImage image, VkImageAspectFlags aspectMask
 	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 	case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
 		imgMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		dstStages = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		break;
 	// Ensure any copy or cpu writes to image are flushed
 	// An image n this layout can only be used as a read-only shader resource
 	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
 		imgMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		imgMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		dstStages = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 		break;
 	// An image in this layout can only be used as a frambuffer color attachment
 	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
@@ -748,6 +753,7 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData* text
 		samplerCi.maxAnisotropy = 1;
 	}
 	samplerCi.compareOp = VK_COMPARE_OP_NEVER;
+	samplerCi.compareEnable = VK_FALSE;
 	samplerCi.minLod = 0.0f;
 	samplerCi.maxLod = 0.0f;
 	samplerCi.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
@@ -797,7 +803,7 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData* tex
 	bufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferCi.pNext = nullptr;
 	bufferCi.flags = 0;
-	bufferCi.size = width * height;
+	bufferCi.size = width * height * 4;
 	bufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 	bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	bufferCi.queueFamilyIndexCount = 0;
@@ -829,7 +835,7 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData* tex
 	result = vkMapMemory(deviceObj->device, bufferMemory, 0, memRequirement.size, 0, (void**)&data);
 	assert(result == VK_SUCCESS);
 
-	memcpy(data, pixels, width * height);
+	memcpy(data, pixels, width * height * 4);
 	vkUnmapMemory(deviceObj->device, bufferMemory);
 
 	VkImageCreateInfo imageCi;
@@ -888,8 +894,9 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData* tex
 
 	std::vector<VkBufferImageCopy> bufferImgCopyList;
 	uint32_t bufferOffset = 0;
-	for (uint32_t i = 0; i < texture->mipMapLevels; i++)
+	//for (uint32_t i = 0; i < texture->mipMapLevels; i++)
 	{
+		uint32_t i = 0;
 		VkBufferImageCopy bufImgCopyItem;
 		bufImgCopyItem.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		bufImgCopyItem.imageSubresource.mipLevel = i;
@@ -906,9 +913,6 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData* tex
 
 	vkCmdCopyBufferToImage(cmdTexture, buffer, texture->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)bufferImgCopyList.size(), bufferImgCopyList.data());
 
-	texture->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	setImageLayout(texture->image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, texture->imageLayout, subresourceRange, cmdTexture);
-
 	CommandBufferMgr::endCommandBuffer(cmdTexture);
 
 	// Fence to ensure copies finish before continuing
@@ -920,6 +924,36 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData* tex
 	vkCreateFence(deviceObj->device, &fenceCi, nullptr, &fence);
 
 	VkSubmitInfo submitInfo;
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.pNext = nullptr;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &cmdTexture;
+	submitInfo.waitSemaphoreCount = 0;
+	submitInfo.pWaitSemaphores = nullptr;
+	submitInfo.pWaitDstStageMask = 0;
+	submitInfo.signalSemaphoreCount = 0;
+	submitInfo.pSignalSemaphores = nullptr;
+
+	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdTexture, &submitInfo, fence);
+	// Wait for max of 10 seconds
+	vkWaitForFences(deviceObj->device, 1, &fence, VK_TRUE, 10000000000);
+	vkDestroyFence(deviceObj->device, fence, nullptr);
+	std::cout << "Submitted first command buffer for image creation" << std::endl;
+	CommandBufferMgr::beginCommandBuffer(cmdTexture);
+	texture->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	setImageLayout(texture->image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, texture->imageLayout, subresourceRange, cmdTexture);
+
+	CommandBufferMgr::endCommandBuffer(cmdTexture);
+
+	// Fence to ensure copies finish before continuing
+	//VkFence fence;
+	//VkFenceCreateInfo fenceCi;
+	fenceCi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCi.pNext = nullptr;
+	fenceCi.flags = 0;
+	vkCreateFence(deviceObj->device, &fenceCi, nullptr, &fence);
+
+	//VkSubmitInfo submitInfo;
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.pNext = nullptr;
 	submitInfo.commandBufferCount = 1;
@@ -958,6 +992,7 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData* tex
 		samplerCi.maxAnisotropy = 1;
 	}
 	samplerCi.compareOp = VK_COMPARE_OP_NEVER;
+	samplerCi.compareEnable = VK_FALSE;
 	samplerCi.minLod = 0.0f;
 	samplerCi.maxLod = 0.0f;
 	samplerCi.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
